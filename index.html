@@ -667,7 +667,7 @@
             </div>
 
             <div class="space-y-2 text-xs text-gray-300">
-                <label class="block text-[10px] font-semibold text-gray-400 uppercase">URL M3U / Xtream API</label>
+                <label id="xtreamUrlLabel" for="xtreamUrlInput" class="block text-[10px] font-semibold text-gray-400 uppercase">URL M3U / Xtream API</label>
                 <input type="text" id="xtreamUrlInput" class="tv-focusable w-full bg-black/60 border border-gray-700 rounded-xl px-3.5 py-2 text-white focus:outline-none text-xs font-mono">
                 <p class="text-[9px] text-gray-500 pt-0.5">O sistema extrai exclusivamente filmes e séries.</p>
             </div>
@@ -697,6 +697,7 @@
         let searchMatches = [];
         let searchRenderCount = 0;
         let currentPlatformFilter = null;
+        const androidXtreamRequests = new Map();
         const platformFilters = [
             { id: 'netflix', label: 'Netflix', image: 'img/NETFLIX_NV.jpg', match: /NETFLIX/i },
             { id: 'prime', label: 'Prime Video', image: 'img/Amazon-prime-video.jpg', match: /PRIME/i },
@@ -720,6 +721,42 @@
         const SEARCH_BATCH_SIZE = 40;
         const normalizeSearchText = value => (value || '').toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         const scheduleSearch = debounce(executeSearch, 220);
+
+        function finishAndroidXtreamRequest(requestId, status, responseText) {
+            const pending = androidXtreamRequests.get(requestId);
+            if (!pending) return;
+            clearTimeout(pending.timeoutId);
+            androidXtreamRequests.delete(requestId);
+            let responseData;
+            try {
+                responseData = JSON.parse(responseText);
+            } catch {
+                pending.reject(new Error('Resposta inválida da conexão Android.'));
+                return;
+            }
+            if (status < 200 || status >= 300) {
+                pending.reject(new Error(responseData.error || `Falha da API (${status}).`));
+                return;
+            }
+            pending.resolve(responseData);
+        }
+
+        window.onAndroidXtreamResult = finishAndroidXtreamRequest;
+        window.onAndroidXtreamChunk = (requestId, status, index, total, chunk) => {
+            const pending = androidXtreamRequests.get(requestId);
+            if (!pending || total < 1 || total > 256 || index < 0 || index >= total) return;
+            if (!pending.chunks) {
+                pending.chunks = new Array(total);
+                pending.chunkCount = 0;
+                pending.status = status;
+            }
+            if (pending.chunks.length !== total || pending.chunks[index] !== undefined) return;
+            pending.chunks[index] = chunk;
+            pending.chunkCount++;
+            if (pending.chunkCount === total) {
+                finishAndroidXtreamRequest(requestId, pending.status, pending.chunks.join(''));
+            }
+        };
 
         function debounce(callback, delay) {
             let timerId = 0;
@@ -908,7 +945,9 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             initLazyImageObserver();
-            let saved = localStorage.getItem('venus_url_tv') || DEFAULT_URL;
+            const androidBridge = window.AndroidBridge?.isAvailable?.() === true;
+            const androidConfigured = androidBridge && AndroidBridge.isConfigured();
+            let saved = androidConfigured ? '' : (localStorage.getItem('venus_url_tv') || DEFAULT_URL);
             document.getElementById('xtreamUrlInput').value = saved;
             parseUrl(saved);
             initApp();
@@ -917,6 +956,13 @@
         });
 
         function parseUrl(urlStr) {
+            if (window.AndroidBridge?.isAvailable?.() === true) {
+                config = {
+                    host: '', username: '', password: '', playerApi: '',
+                    movieBase: '', seriesBase: '', proxy: false, androidBridge: true
+                };
+                return;
+            }
             if (!urlStr && window.location.protocol !== 'file:') {
                 config = {
                     host: window.location.origin,
@@ -925,7 +971,8 @@
                     playerApi: '/api/xtream',
                     movieBase: '',
                     seriesBase: '',
-                    proxy: true
+                    proxy: true,
+                    androidBridge: false
                 };
                 return;
             }
@@ -942,7 +989,8 @@
                     playerApi: `${host}/player_api.php?username=${username}&password=${password}`,
                     movieBase: `${host}/movie/${username}/${password}/`,
                     seriesBase: `${host}/series/${username}/${password}/`,
-                    proxy: false
+                    proxy: false,
+                    androidBridge: false
                 };
             } catch (e) {
                 config = {
@@ -950,7 +998,8 @@
                     playerApi: '',
                     movieBase: '',
                     seriesBase: '',
-                    proxy: false
+                    proxy: false,
+                    androidBridge: false
                 };
             }
         }
@@ -967,6 +1016,9 @@
         }
 
         function buildStreamUrl(kind, id, extension = 'mp4') {
+            if (config.androidBridge && window.AndroidBridge) {
+                return AndroidBridge.buildStreamUrl(kind, String(id), extension);
+            }
             if (config.proxy) {
                 const action = kind === 'series' ? 'stream_series' : 'stream_movie';
                 return `${config.playerApi}?${new URLSearchParams({ action, id: String(id), ext: extension })}`;
@@ -987,14 +1039,30 @@
         }
 
         async function initApp() {
-            const urlInput = document.getElementById('xtreamUrlInput').value.trim() || DEFAULT_URL;
+            const inputElement = document.getElementById('xtreamUrlInput');
+            const enteredUrl = inputElement.value.trim();
+            const hasAndroidBridge = window.AndroidBridge?.isAvailable?.() === true;
+            if (hasAndroidBridge) {
+                if (enteredUrl && !AndroidBridge.saveConnection(enteredUrl)) {
+                    showConnectionSetupError('A URL Xtream informada é inválida. Confira host, usuário e senha.');
+                    return;
+                }
+                if (!AndroidBridge.isConfigured()) {
+                    parseUrl('');
+                    showConnectionSetup();
+                    return;
+                }
+                inputElement.value = '';
+                parseUrl('');
+            }
+            const urlInput = enteredUrl || DEFAULT_URL;
             if (!urlInput && window.location.protocol === 'file:') {
                 parseUrl('');
                 showConnectionSetup();
                 return;
             }
-            if (urlInput) localStorage.setItem('venus_url_tv', urlInput);
-            parseUrl(urlInput);
+            if (urlInput && !hasAndroidBridge) localStorage.setItem('venus_url_tv', urlInput);
+            if (!hasAndroidBridge) parseUrl(urlInput);
             renderSkeletonState();
             apiConnectionError = '';
 
@@ -1013,6 +1081,13 @@
             }
         }
 
+        function showConnectionSetupError(message) {
+            const label = document.getElementById('xtreamUrlLabel');
+            if (label) label.textContent = message;
+            document.getElementById('settingsModal').classList.remove('hidden');
+            updateFocusables();
+        }
+
         function showProxyConnectionError(message) {
             const container = document.getElementById('catalogContainer');
             const panel = document.createElement('div');
@@ -1022,7 +1097,9 @@
             errorText.textContent = message;
             const setupText = document.createElement('p');
             setupText.className = 'text-xs';
-            setupText.textContent = 'A conexão Xtream é configurada uma única vez nas variáveis do projeto na Vercel.';
+            setupText.textContent = config.androidBridge
+                ? 'Confira a conexão Xtream salva neste app e tente novamente.'
+                : 'A conexão Xtream é configurada uma única vez nas variáveis do projeto na Vercel.';
             const retryButton = document.createElement('button');
             retryButton.type = 'button';
             retryButton.dataset.navId = 'retry-connection';
@@ -1040,6 +1117,24 @@
                 if (data && typeof data.error === 'string') return data.error;
             } catch {}
             return fallback;
+        }
+
+        async function requestXtreamData(action, params = {}) {
+            if (config.androidBridge && window.AndroidBridge) {
+                const requestId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+                return new Promise((resolve, reject) => {
+                    const timeoutId = setTimeout(() => {
+                        androidXtreamRequests.delete(requestId);
+                        reject(new Error('A conexão com o provedor excedeu 30 segundos.'));
+                    }, 30000);
+                    androidXtreamRequests.set(requestId, { resolve, reject, timeoutId, chunks: null, chunkCount: 0 });
+                    AndroidBridge.requestXtream(requestId, action, JSON.stringify(params));
+                });
+            }
+
+            const response = await fetch(buildXtreamUrl(action, params));
+            if (!response.ok) throw new Error(await getApiError(response, `Falha da API (${response.status}).`));
+            return response.json();
         }
 
         function renderSkeletonState() {
@@ -1066,15 +1161,11 @@
 
         async function loadMoviesEndpoint() {
             try {
-                const catRes = await fetch(buildXtreamUrl('get_vod_categories'));
-                if (!catRes.ok) throw new Error(await getApiError(catRes, 'Falha ao carregar categorias de filmes.'));
-                const catData = await catRes.json();
+                const catData = await requestXtreamData('get_vod_categories');
                 let catMap = {};
                 if (Array.isArray(catData)) catData.forEach(c => { catMap[c.category_id] = c.category_name; });
 
-                const streamRes = await fetch(buildXtreamUrl('get_vod_streams'));
-                if (!streamRes.ok) throw new Error(await getApiError(streamRes, 'Falha ao carregar filmes.'));
-                const streamData = await streamRes.json();
+                const streamData = await requestXtreamData('get_vod_streams');
 
                 if (Array.isArray(streamData)) {
                     catalogData.movies = streamData.map(item => ({
@@ -1106,15 +1197,11 @@
 
         async function loadSeriesEndpoint() {
             try {
-                const catRes = await fetch(buildXtreamUrl('get_series_categories'));
-                if (!catRes.ok) throw new Error(await getApiError(catRes, 'Falha ao carregar categorias de séries.'));
-                const catData = await catRes.json();
+                const catData = await requestXtreamData('get_series_categories');
                 let catMap = {};
                 if (Array.isArray(catData)) catData.forEach(c => { catMap[c.category_id] = c.category_name; });
 
-                const streamRes = await fetch(buildXtreamUrl('get_series'));
-                if (!streamRes.ok) throw new Error(await getApiError(streamRes, 'Falha ao carregar séries.'));
-                const streamData = await streamRes.json();
+                const streamData = await requestXtreamData('get_series');
 
                 if (Array.isArray(streamData)) {
                     catalogData.series = streamData.map(item => ({
@@ -1144,6 +1231,10 @@
         }
 
         async function loadFallbackOrProxyData(url) {
+            if (config.androidBridge || config.proxy) {
+                showProxyConnectionError(apiConnectionError || 'Não foi possível carregar os dados do provedor.');
+                return;
+            }
             try {
                 const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
                 const res = await fetch(proxyUrl);
@@ -1531,9 +1622,7 @@
             try {
                 let info = seriesInfoCache[seriesId];
                 if (!info) {
-                    const res = await fetch(buildXtreamUrl('get_series_info', { series_id: seriesId }));
-                    if (!res.ok) throw new Error('Não foi possível carregar os detalhes desta série.');
-                    info = await res.json();
+                    info = await requestXtreamData('get_series_info', { series_id: seriesId });
                     seriesInfoCache[seriesId] = info;
                 }
 
@@ -1695,7 +1784,15 @@
 
         function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); updateFocusables(); }
         function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); updateFocusables(); }
-        function saveAndReload() { closeSettingsModal(); initApp(); }
+        function saveAndReload() {
+            const url = document.getElementById('xtreamUrlInput').value.trim();
+            if (window.AndroidBridge?.isAvailable?.() === true && url && !AndroidBridge.saveConnection(url)) {
+                showConnectionSetupError('URL inválida. Informe host, username e password da API Xtream.');
+                return;
+            }
+            closeSettingsModal();
+            initApp();
+        }
 
         // --- TV REMOTE CONTROL NAVIGATION ENGINE (D-PAD) ---
         function updateFocusables() {
