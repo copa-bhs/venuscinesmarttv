@@ -1014,14 +1014,32 @@
         }
 
         function showProxyConnectionError(message) {
-            document.getElementById('catalogContainer').innerHTML = `
-                <div class="text-center py-12 text-gray-400">
-                    <p class="text-sm mb-3">${message}</p>
-                    <p class="text-xs">A conexão Xtream é configurada uma única vez nas variáveis do projeto na Vercel.</p>
-                    <button data-nav-id="retry-connection" onclick="initApp()" class="tv-focusable mt-4 bg-venus-red hover:bg-venus-darkred px-5 py-2.5 rounded-lg text-sm font-bold text-white">Tentar novamente</button>
-                </div>
-            `;
+            const container = document.getElementById('catalogContainer');
+            const panel = document.createElement('div');
+            panel.className = 'text-center py-12 text-gray-400';
+            const errorText = document.createElement('p');
+            errorText.className = 'text-sm mb-3';
+            errorText.textContent = message;
+            const setupText = document.createElement('p');
+            setupText.className = 'text-xs';
+            setupText.textContent = 'A conexão Xtream é configurada uma única vez nas variáveis do projeto na Vercel.';
+            const retryButton = document.createElement('button');
+            retryButton.type = 'button';
+            retryButton.dataset.navId = 'retry-connection';
+            retryButton.className = 'tv-focusable mt-4 bg-venus-red hover:bg-venus-darkred px-5 py-2.5 rounded-lg text-sm font-bold text-white';
+            retryButton.textContent = 'Tentar novamente';
+            retryButton.onclick = initApp;
+            panel.append(errorText, setupText, retryButton);
+            container.replaceChildren(panel);
             updateFocusables();
+        }
+
+        async function getApiError(response, fallback) {
+            try {
+                const data = await response.json();
+                if (data && typeof data.error === 'string') return data.error;
+            } catch {}
+            return fallback;
         }
 
         function renderSkeletonState() {
@@ -1049,13 +1067,13 @@
         async function loadMoviesEndpoint() {
             try {
                 const catRes = await fetch(buildXtreamUrl('get_vod_categories'));
-                if (!catRes.ok) throw new Error((await catRes.json()).error || 'Falha ao carregar categorias de filmes.');
+                if (!catRes.ok) throw new Error(await getApiError(catRes, 'Falha ao carregar categorias de filmes.'));
                 const catData = await catRes.json();
                 let catMap = {};
                 if (Array.isArray(catData)) catData.forEach(c => { catMap[c.category_id] = c.category_name; });
 
                 const streamRes = await fetch(buildXtreamUrl('get_vod_streams'));
-                if (!streamRes.ok) throw new Error((await streamRes.json()).error || 'Falha ao carregar filmes.');
+                if (!streamRes.ok) throw new Error(await getApiError(streamRes, 'Falha ao carregar filmes.'));
                 const streamData = await streamRes.json();
 
                 if (Array.isArray(streamData)) {
@@ -1089,13 +1107,13 @@
         async function loadSeriesEndpoint() {
             try {
                 const catRes = await fetch(buildXtreamUrl('get_series_categories'));
-                if (!catRes.ok) throw new Error((await catRes.json()).error || 'Falha ao carregar categorias de séries.');
+                if (!catRes.ok) throw new Error(await getApiError(catRes, 'Falha ao carregar categorias de séries.'));
                 const catData = await catRes.json();
                 let catMap = {};
                 if (Array.isArray(catData)) catData.forEach(c => { catMap[c.category_id] = c.category_name; });
 
                 const streamRes = await fetch(buildXtreamUrl('get_series'));
-                if (!streamRes.ok) throw new Error((await streamRes.json()).error || 'Falha ao carregar séries.');
+                if (!streamRes.ok) throw new Error(await getApiError(streamRes, 'Falha ao carregar séries.'));
                 const streamData = await streamRes.json();
 
                 if (Array.isArray(streamData)) {

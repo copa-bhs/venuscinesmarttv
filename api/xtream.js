@@ -77,6 +77,13 @@ module.exports = async function handler(request, response) {
         if (request.headers.range) headers.set('Range', request.headers.range);
         const upstream = await fetch(upstreamUrl, { method: request.method, headers });
 
+        if (upstream.status === 401 || upstream.status === 403) {
+            const error = upstream.status === 401
+                ? 'O provedor recusou as credenciais Xtream configuradas na Vercel.'
+                : 'O provedor ou Cloudflare bloqueou conexões originadas da Vercel. Solicite ao provedor a liberação do acesso serverless.';
+            return respondJson(response, upstream.status, { error, code: upstream.status === 401 ? 'UPSTREAM_AUTH' : 'UPSTREAM_BLOCKED' });
+        }
+
         if (isStream) {
             response.statusCode = upstream.status;
             for (const headerName of ['content-type', 'content-length', 'content-range', 'accept-ranges']) {
