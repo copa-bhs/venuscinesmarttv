@@ -684,7 +684,8 @@
     <script>
         const DEFAULT_URL = '';
 
-        let config = { host: '', username: '', password: '', playerApi: '', movieBase: '', seriesBase: '' };
+        let config = { host: '', username: '', password: '', playerApi: '', movieBase: '', seriesBase: '', proxy: false };
+        let apiConnectionError = '';
         let currentTab = 'home';
         let catalogData = { movies: [], series: [] };
         let seriesInfoCache = {};
@@ -916,6 +917,19 @@
         });
 
         function parseUrl(urlStr) {
+            if (!urlStr && window.location.protocol !== 'file:') {
+                config = {
+                    host: window.location.origin,
+                    username: '',
+                    password: '',
+                    playerApi: '/api/xtream',
+                    movieBase: '',
+                    seriesBase: '',
+                    proxy: true
+                };
+                return;
+            }
+
             try {
                 const urlObj = new URL(urlStr);
                 const host = urlObj.origin;
@@ -927,16 +941,38 @@
                     host, username, password,
                     playerApi: `${host}/player_api.php?username=${username}&password=${password}`,
                     movieBase: `${host}/movie/${username}/${password}/`,
-                    seriesBase: `${host}/series/${username}/${password}/`
+                    seriesBase: `${host}/series/${username}/${password}/`,
+                    proxy: false
                 };
             } catch (e) {
                 config = {
                     host: '', username: '', password: '',
                     playerApi: '',
                     movieBase: '',
-                    seriesBase: ''
+                    seriesBase: '',
+                    proxy: false
                 };
             }
+        }
+
+        function buildXtreamUrl(action, params = {}) {
+            if (config.proxy) {
+                const query = new URLSearchParams({ action, ...params });
+                return `${config.playerApi}?${query}`;
+            }
+            const url = new URL(config.playerApi);
+            url.searchParams.set('action', action);
+            Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
+            return url.toString();
+        }
+
+        function buildStreamUrl(kind, id, extension = 'mp4') {
+            if (config.proxy) {
+                const action = kind === 'series' ? 'stream_series' : 'stream_movie';
+                return `${config.playerApi}?${new URLSearchParams({ action, id: String(id), ext: extension })}`;
+            }
+            const base = kind === 'series' ? config.seriesBase : config.movieBase;
+            return `${base}${id}.${extension}`;
         }
 
         function showConnectionSetup() {
@@ -952,17 +988,22 @@
 
         async function initApp() {
             const urlInput = document.getElementById('xtreamUrlInput').value.trim() || DEFAULT_URL;
-            if (!urlInput) {
+            if (!urlInput && window.location.protocol === 'file:') {
                 parseUrl('');
                 showConnectionSetup();
                 return;
             }
-            localStorage.setItem('venus_url_tv', urlInput);
+            if (urlInput) localStorage.setItem('venus_url_tv', urlInput);
             parseUrl(urlInput);
             renderSkeletonState();
+            apiConnectionError = '';
 
             try {
                 await Promise.all([loadMoviesEndpoint(), loadSeriesEndpoint()]);
+                if (apiConnectionError && catalogData.movies.length === 0 && catalogData.series.length === 0) {
+                    showProxyConnectionError(apiConnectionError);
+                    return;
+                }
                 rebuildCatalogSearchIndex();
                 switchTab(currentTab);
                 setupHero();
@@ -970,6 +1011,17 @@
             } catch (err) {
                 loadFallbackOrProxyData(urlInput);
             }
+        }
+
+        function showProxyConnectionError(message) {
+            document.getElementById('catalogContainer').innerHTML = `
+                <div class="text-center py-12 text-gray-400">
+                    <p class="text-sm mb-3">${message}</p>
+                    <p class="text-xs">A conexão Xtream é configurada uma única vez nas variáveis do projeto na Vercel.</p>
+                    <button data-nav-id="retry-connection" onclick="initApp()" class="tv-focusable mt-4 bg-venus-red hover:bg-venus-darkred px-5 py-2.5 rounded-lg text-sm font-bold text-white">Tentar novamente</button>
+                </div>
+            `;
+            updateFocusables();
         }
 
         function renderSkeletonState() {
@@ -996,12 +1048,14 @@
 
         async function loadMoviesEndpoint() {
             try {
-                const catRes = await fetch(`${config.playerApi}&action=get_vod_categories`);
+                const catRes = await fetch(buildXtreamUrl('get_vod_categories'));
+                if (!catRes.ok) throw new Error((await catRes.json()).error || 'Falha ao carregar categorias de filmes.');
                 const catData = await catRes.json();
                 let catMap = {};
                 if (Array.isArray(catData)) catData.forEach(c => { catMap[c.category_id] = c.category_name; });
 
-                const streamRes = await fetch(`${config.playerApi}&action=get_vod_streams`);
+                const streamRes = await fetch(buildXtreamUrl('get_vod_streams'));
+                if (!streamRes.ok) throw new Error((await streamRes.json()).error || 'Falha ao carregar filmes.');
                 const streamData = await streamRes.json();
 
                 if (Array.isArray(streamData)) {
@@ -1022,22 +1076,26 @@
                         plot: item.plot || 'Sinopse oficial indisponível para este filme.',
                         cast: item.cast || 'Elenco padrão',
                         type: 'movies',
-                        url: `${config.movieBase}${item.stream_id}.${item.container_extension || 'mp4'}`
+                        streamExtension: item.container_extension || 'mp4',
+                        url: buildStreamUrl('movie', item.stream_id || item.num, item.container_extension || 'mp4')
                     }));
                 }
             } catch (e) {
                 catalogData.movies = [];
+                apiConnectionError = e.message || 'Falha ao conectar ao serviço Xtream.';
             }
         }
 
         async function loadSeriesEndpoint() {
             try {
-                const catRes = await fetch(`${config.playerApi}&action=get_series_categories`);
+                const catRes = await fetch(buildXtreamUrl('get_series_categories'));
+                if (!catRes.ok) throw new Error((await catRes.json()).error || 'Falha ao carregar categorias de séries.');
                 const catData = await catRes.json();
                 let catMap = {};
                 if (Array.isArray(catData)) catData.forEach(c => { catMap[c.category_id] = c.category_name; });
 
-                const streamRes = await fetch(`${config.playerApi}&action=get_series`);
+                const streamRes = await fetch(buildXtreamUrl('get_series'));
+                if (!streamRes.ok) throw new Error((await streamRes.json()).error || 'Falha ao carregar séries.');
                 const streamData = await streamRes.json();
 
                 if (Array.isArray(streamData)) {
@@ -1063,6 +1121,7 @@
                 }
             } catch (e) {
                 catalogData.series = [];
+                apiConnectionError = e.message || 'Falha ao conectar ao serviço Xtream.';
             }
         }
 
@@ -1454,7 +1513,8 @@
             try {
                 let info = seriesInfoCache[seriesId];
                 if (!info) {
-                    const res = await fetch(`${config.playerApi}&action=get_series_info&series_id=${seriesId}`);
+                    const res = await fetch(buildXtreamUrl('get_series_info', { series_id: seriesId }));
+                    if (!res.ok) throw new Error('Não foi possível carregar os detalhes desta série.');
                     info = await res.json();
                     seriesInfoCache[seriesId] = info;
                 }
@@ -1514,7 +1574,7 @@
                 const epDiv = document.createElement('div');
                 epDiv.className = 'tv-focusable flex items-center justify-between bg-black/50 hover:bg-gray-800 p-2.5 rounded-xl transition cursor-pointer border border-gray-800/60';
                 epDiv.setAttribute('data-nav-id', `ep-${ep.id}`);
-                const epUrl = `${config.host}/series/${config.username}/${config.password}/${ep.id}.${ep.container_extension || 'mp4'}`;
+                const epUrl = buildStreamUrl('series', ep.id, ep.container_extension || 'mp4');
 
                 epDiv.innerHTML = `
                     <div class="flex items-center space-x-2.5">
@@ -1534,7 +1594,7 @@
 
                 epDiv.onclick = () => {
                     closeDetailsModal();
-                    playItem({ name: `${currentSelectedItem.name} - Ep ${ep.episode_num}`, url: epUrl });
+                    playItem({ name: `${currentSelectedItem.name} - Ep ${ep.episode_num}`, url: epUrl, streamExtension: ep.container_extension || 'mp4' });
                 };
 
                 container.appendChild(epDiv);
@@ -1556,7 +1616,8 @@
             if (currentHls) { currentHls.destroy(); currentHls = null; }
 
             const streamUrl = item.url;
-            if (Hls.isSupported() && (streamUrl.includes('.m3u8') || streamUrl.includes('.ts'))) {
+            const extension = (item.streamExtension || streamUrl.split('.').pop() || '').toLowerCase();
+            if (Hls.isSupported() && (extension === 'm3u8' || extension === 'ts')) {
                 const hls = new Hls();
                 currentHls = hls;
                 hls.loadSource(streamUrl);
