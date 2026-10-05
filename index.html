@@ -1083,7 +1083,7 @@
                 parseUrl('');
             }
             const urlInput = enteredUrl || DEFAULT_URL;
-            if (!urlInput && window.location.protocol === 'file:') {
+            if (!urlInput && window.location.protocol === 'file:' && !hasAndroidBridge) {
                 parseUrl('');
                 showConnectionSetup();
                 return;
