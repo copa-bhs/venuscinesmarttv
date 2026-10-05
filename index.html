@@ -698,6 +698,7 @@
         let searchRenderCount = 0;
         let currentPlatformFilter = null;
         const androidXtreamRequests = new Map();
+        const androidConfigRequests = new Map();
         const platformFilters = [
             { id: 'netflix', label: 'Netflix', image: 'img/NETFLIX_NV.jpg', match: /NETFLIX/i },
             { id: 'prime', label: 'Prime Video', image: 'img/Amazon-prime-video.jpg', match: /PRIME/i },
@@ -742,6 +743,24 @@
         }
 
         window.onAndroidXtreamResult = finishAndroidXtreamRequest;
+        window.onAndroidConfigResult = (requestId, status, responseText) => {
+            const pending = androidConfigRequests.get(requestId);
+            if (!pending) return;
+            clearTimeout(pending.timeoutId);
+            androidConfigRequests.delete(requestId);
+            let result;
+            try {
+                result = JSON.parse(responseText);
+            } catch {
+                pending.reject(new Error('Resposta inválida do Firebase.'));
+                return;
+            }
+            if (status < 200 || status >= 300) {
+                pending.reject(new Error(result.error || `Falha ao carregar configuração (${status}).`));
+                return;
+            }
+            pending.resolve(result);
+        };
         window.onAndroidXtreamChunk = (requestId, status, index, total, chunk) => {
             const pending = androidXtreamRequests.get(requestId);
             if (!pending || total < 1 || total > 256 || index < 0 || index >= total) return;
@@ -947,7 +966,7 @@
             initLazyImageObserver();
             const androidBridge = window.AndroidBridge?.isAvailable?.() === true;
             const androidConfigured = androidBridge && AndroidBridge.isConfigured();
-            let saved = androidConfigured ? '' : (localStorage.getItem('venus_url_tv') || DEFAULT_URL);
+            let saved = androidBridge ? '' : (localStorage.getItem('venus_url_tv') || DEFAULT_URL);
             document.getElementById('xtreamUrlInput').value = saved;
             parseUrl(saved);
             initApp();
@@ -1049,8 +1068,16 @@
                 }
                 if (!AndroidBridge.isConfigured()) {
                     parseUrl('');
-                    showConnectionSetup();
-                    return;
+                    try {
+                        await requestAndroidFirebaseConfig();
+                    } catch (error) {
+                        showProxyConnectionError(error.message || 'Não foi possível carregar config_iptv do Firebase.');
+                        return;
+                    }
+                    if (!AndroidBridge.isConfigured()) {
+                        showProxyConnectionError('O Firebase não retornou uma conexão Xtream válida.');
+                        return;
+                    }
                 }
                 inputElement.value = '';
                 parseUrl('');
@@ -1135,6 +1162,18 @@
             const response = await fetch(buildXtreamUrl(action, params));
             if (!response.ok) throw new Error(await getApiError(response, `Falha da API (${response.status}).`));
             return response.json();
+        }
+
+        function requestAndroidFirebaseConfig() {
+            const requestId = `firebase-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+            return new Promise((resolve, reject) => {
+                const timeoutId = setTimeout(() => {
+                    androidConfigRequests.delete(requestId);
+                    reject(new Error('O Firebase não respondeu em 20 segundos.'));
+                }, 20000);
+                androidConfigRequests.set(requestId, { resolve, reject, timeoutId });
+                AndroidBridge.loadFirebaseConfig(requestId);
+            });
         }
 
         function renderSkeletonState() {
