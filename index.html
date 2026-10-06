@@ -740,10 +740,12 @@
         let watchlist = JSON.parse(localStorage.getItem('venus_watchlist_tv') || '[]');
         let currentSelectedItem = null;
         let currentHls = null;
-        let batchSize = 10;
+        const MAX_CARDS_PER_ROW = 8;
+        const MAX_CATALOG_SECTIONS = 8;
+        let batchSize = MAX_CARDS_PER_ROW;
         let currentGroupedCatalog = [];
         let renderedCategoryCount = 0;
-        const CATEGORY_BATCH_SIZE = 8;
+        const CATEGORY_BATCH_SIZE = MAX_CATALOG_SECTIONS;
         let currentSearchQuery = '';
         let searchMatches = [];
         let searchRenderCount = 0;
@@ -1648,8 +1650,9 @@
             const track = document.createElement('div');
             track.id = rowId;
             track.className = 'carousel-track flex space-x-3.5 overflow-x-auto no-scrollbar';
-            groupItems.slice(0, batchSize).forEach(item => track.appendChild(createCatalogCard(item)));
-            if (groupItems.length > batchSize) track.appendChild(createMoreItemsCard(rowId));
+            const visibleItems = groupItems.slice(0, MAX_CARDS_PER_ROW);
+            visibleItems.forEach(item => track.appendChild(createCatalogCard(item)));
+            if (groupItems.length > MAX_CARDS_PER_ROW) track.appendChild(createMoreItemsCard(rowId));
 
             rowDiv.append(heading, track);
             return rowDiv;
