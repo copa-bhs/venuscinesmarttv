@@ -11,3 +11,5 @@ Aplicação estática em HTML, CSS e JavaScript puro, otimizada para navegação
 5. Faça um novo deploy. Os próximos pushes para `main` gerarão novos deploys automaticamente.
 
 O endpoint serverless `/api/xtream` usa essas variáveis para consultar catálogo, detalhes e streams. Assim, a conexão é configurada uma única vez na Vercel e nenhuma TV precisa inserir a URL. Não coloque usuário ou senha no código, em variáveis `VITE_*`/`NEXT_PUBLIC_*` ou em commits públicos.
+
+No Android TV, a SPA consulta o bridge nativo, mostra até oito categorias por lote e usa IndexedDB como cache local por 15 minutos. O cache guarda metadados do catálogo, não URLs de stream com credenciais. A splash inicial exibe o V esmeralda até haver cache ou resposta de rede.

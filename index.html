@@ -5,8 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vênus Cine - Filmes e Séries TV</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <script defer src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -24,8 +26,8 @@
             }
         }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -93,6 +95,46 @@
         }
         .card-item img {
             background-color: #181818;
+        }
+
+        .app-splash {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: grid;
+            place-items: center;
+            background: #030806;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 180ms ease, visibility 180ms ease;
+        }
+        .app-splash.is-visible {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+        .app-splash[hidden] {
+            display: none !important;
+        }
+        .splash-mark {
+            color: transparent;
+            background: linear-gradient(115deg, #064e3b 10%, #10b981 38%, #d1fae5 50%, #059669 62%, #064e3b 90%);
+            background-size: 240% 100%;
+            background-clip: text;
+            -webkit-background-clip: text;
+            font-size: min(48vw, 320px);
+            font-weight: 900;
+            line-height: 0.8;
+            animation: emeraldSweep 1.8s linear infinite;
+            filter: drop-shadow(0 0 18px rgba(16,185,129,0.36));
+        }
+        @keyframes emeraldSweep {
+            from { background-position: 100% 0; }
+            to { background-position: -140% 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .app-splash, .splash-mark { transition: none; animation: none; }
         }
 
         .details-page {
@@ -395,6 +437,10 @@
 </head>
 <body class="h-screen w-screen flex flex-col overflow-hidden bg-[#070707]">
 
+    <div id="appSplash" class="app-splash is-visible" role="status" aria-label="Carregando Vênus Cine">
+        <span class="splash-mark" aria-hidden="true">V</span>
+    </div>
+
 
     <nav id="navbar" class="px-8 py-3.5 flex items-center justify-between bg-[#070707]/95 z-40 border-b border-gray-900">
         <div class="flex items-center space-x-8">
@@ -695,7 +741,7 @@
         let batchSize = 10;
         let currentGroupedCatalog = [];
         let renderedCategoryCount = 0;
-        const CATEGORY_BATCH_SIZE = 6;
+        const CATEGORY_BATCH_SIZE = 8;
         let currentSearchQuery = '';
         let searchMatches = [];
         let searchRenderCount = 0;
@@ -723,9 +769,103 @@
         let catalogSearchIndex = [];
         let lazyImageObserver = null;
         const catalogRows = new Map();
+        const CATALOG_CACHE_DB = 'venus-cine-catalog';
+        const CATALOG_CACHE_STORE = 'catalog';
+        const CATALOG_CACHE_KEY = 'xtream-catalog-v1';
+        const CATALOG_CACHE_TTL = 15 * 60 * 1000;
         const SEARCH_BATCH_SIZE = 40;
         const normalizeSearchText = value => (value || '').toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         const scheduleSearch = debounce(executeSearch, 220);
+
+        let catalogCacheDatabasePromise = null;
+        let splashHideTimer = 0;
+
+        function openCatalogCache() {
+            if (!('indexedDB' in window)) return Promise.resolve(null);
+            if (catalogCacheDatabasePromise) return catalogCacheDatabasePromise;
+            catalogCacheDatabasePromise = new Promise(resolve => {
+                const request = indexedDB.open(CATALOG_CACHE_DB, 1);
+                request.onupgradeneeded = () => {
+                    const database = request.result;
+                    if (!database.objectStoreNames.contains(CATALOG_CACHE_STORE)) {
+                        database.createObjectStore(CATALOG_CACHE_STORE);
+                    }
+                };
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => resolve(null);
+                request.onblocked = () => resolve(null);
+            });
+            return catalogCacheDatabasePromise;
+        }
+
+        async function readCatalogCache() {
+            const database = await openCatalogCache();
+            if (!database) return null;
+            return new Promise(resolve => {
+                const transaction = database.transaction(CATALOG_CACHE_STORE, 'readonly');
+                const request = transaction.objectStore(CATALOG_CACHE_STORE).get(CATALOG_CACHE_KEY);
+                request.onsuccess = () => {
+                    const cached = request.result;
+                    if (!cached || !Array.isArray(cached.movies) || !Array.isArray(cached.series)) {
+                        resolve(null);
+                        return;
+                    }
+                    const movies = cached.movies.map(item => ({
+                        ...item,
+                        url: buildStreamUrl('movie', item.id, item.streamExtension || 'mp4')
+                    }));
+                    const series = cached.series.map(item => ({ ...item, url: null }));
+                    resolve({ movies, series, savedAt: Number(cached.savedAt) || 0 });
+                };
+                request.onerror = () => resolve(null);
+            });
+        }
+
+        async function writeCatalogCache() {
+            const database = await openCatalogCache();
+            if (!database) return;
+            const stripStreamUrl = ({ url, ...item }) => item;
+            const payload = {
+                savedAt: Date.now(),
+                movies: catalogData.movies.map(stripStreamUrl),
+                series: catalogData.series.map(stripStreamUrl)
+            };
+            await new Promise(resolve => {
+                const transaction = database.transaction(CATALOG_CACHE_STORE, 'readwrite');
+                transaction.objectStore(CATALOG_CACHE_STORE).put(payload, CATALOG_CACHE_KEY);
+                transaction.oncomplete = resolve;
+                transaction.onerror = resolve;
+                transaction.onabort = resolve;
+            });
+        }
+
+        async function clearCatalogCache() {
+            const database = await openCatalogCache();
+            if (!database) return;
+            await new Promise(resolve => {
+                const transaction = database.transaction(CATALOG_CACHE_STORE, 'readwrite');
+                transaction.objectStore(CATALOG_CACHE_STORE).delete(CATALOG_CACHE_KEY);
+                transaction.oncomplete = resolve;
+                transaction.onerror = resolve;
+                transaction.onabort = resolve;
+            });
+        }
+
+        function hideAppSplash() {
+            const splash = document.getElementById('appSplash');
+            if (!splash) return;
+            splash.classList.remove('is-visible');
+            clearTimeout(splashHideTimer);
+            splashHideTimer = setTimeout(() => { splash.hidden = true; }, 200);
+        }
+
+        function showAppSplash() {
+            const splash = document.getElementById('appSplash');
+            if (!splash) return;
+            clearTimeout(splashHideTimer);
+            splash.hidden = false;
+            requestAnimationFrame(() => splash.classList.add('is-visible'));
+        }
 
         function finishAndroidXtreamRequest(requestId, status, responseText) {
             const pending = androidXtreamRequests.get(requestId);
@@ -1051,6 +1191,7 @@
         }
 
         function showConnectionSetup() {
+            hideAppSplash();
             document.getElementById('catalogContainer').innerHTML = `
                 <div class="text-center py-12 text-gray-400">
                     <p class="text-sm mb-4">Configure sua conexão para carregar filmes e séries.</p>
@@ -1062,6 +1203,7 @@
         }
 
         async function initApp() {
+            showAppSplash();
             const inputElement = document.getElementById('xtreamUrlInput');
             const enteredUrl = inputElement.value.trim();
             const hasAndroidBridge = window.AndroidBridge?.isAvailable?.() === true;
@@ -1094,8 +1236,24 @@
             }
             if (urlInput && !hasAndroidBridge) localStorage.setItem('venus_url_tv', urlInput);
             if (!hasAndroidBridge) parseUrl(urlInput);
-            renderSkeletonState();
             apiConnectionError = '';
+
+            let hasCachedCatalog = false;
+            try {
+                const cached = await readCatalogCache();
+                if (cached) {
+                    catalogData = { movies: cached.movies, series: cached.series };
+                    rebuildCatalogSearchIndex();
+                    switchTab(currentTab);
+                    setupHero();
+                    updateFocusables();
+                    hasCachedCatalog = true;
+                    hideAppSplash();
+                    if (Date.now() - cached.savedAt < CATALOG_CACHE_TTL) return;
+                }
+            } catch {}
+
+            if (!hasCachedCatalog) renderSkeletonState();
 
             try {
                 await Promise.all([loadMoviesEndpoint(), loadSeriesEndpoint()]);
@@ -1107,6 +1265,8 @@
                 switchTab(currentTab);
                 setupHero();
                 updateFocusables();
+                if (!apiConnectionError) writeCatalogCache().catch(() => {});
+                hideAppSplash();
             } catch (err) {
                 loadFallbackOrProxyData(urlInput);
             }
@@ -1120,6 +1280,7 @@
         }
 
         function showProxyConnectionError(message) {
+            hideAppSplash();
             const container = document.getElementById('catalogContainer');
             const panel = document.createElement('div');
             panel.className = 'text-center py-12 text-gray-400';
@@ -1234,7 +1395,6 @@
                     }));
                 }
             } catch (e) {
-                catalogData.movies = [];
                 apiConnectionError = e.message || 'Falha ao conectar ao serviço Xtream.';
             }
         }
@@ -1270,7 +1430,6 @@
                     }));
                 }
             } catch (e) {
-                catalogData.series = [];
                 apiConnectionError = e.message || 'Falha ao conectar ao serviço Xtream.';
             }
         }
@@ -1289,6 +1448,7 @@
                 switchTab(currentTab);
                 setupHero();
                 updateFocusables();
+                hideAppSplash();
             } catch (e) {}
         }
 
@@ -1829,12 +1989,13 @@
 
         function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); updateFocusables(); }
         function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); updateFocusables(); }
-        function saveAndReload() {
+        async function saveAndReload() {
             const url = document.getElementById('xtreamUrlInput').value.trim();
             if (window.AndroidBridge?.isAvailable?.() === true && url && !AndroidBridge.saveConnection(url)) {
                 showConnectionSetupError('URL inválida. Informe host, username e password da API Xtream.');
                 return;
             }
+            if (url) await clearCatalogCache();
             closeSettingsModal();
             initApp();
         }
