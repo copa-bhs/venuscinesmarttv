@@ -52,11 +52,13 @@
             outline: none !important;
         }
         .tv-focusable {
-            transition: opacity 120ms ease, border-color 120ms ease !important;
+            transition: transform 120ms ease, opacity 120ms ease, border-color 120ms ease, box-shadow 120ms ease !important;
         }
         .tv-focusable.focused {
             outline: none !important;
-            box-shadow: inset 0 0 0 3px #ffffff !important;
+            border-color: rgba(229, 9, 20, 0.95) !important;
+            box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.95), 0 0 24px rgba(229, 9, 20, 0.35) !important;
+            transform: translateY(-1px) scale(1.01);
             z-index: 50 !important;
         }
         .kb-key.focused {
@@ -64,7 +66,7 @@
             color: #ffffff !important;
         }
         #platformFilterList .focused {
-            box-shadow: inset 0 0 0 3px #fff !important;
+            box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.95), 0 0 18px rgba(229, 9, 20, 0.28) !important;
         }
         .hero-gradient {
             background: linear-gradient(180deg, rgba(7,7,7,0) 25%, rgba(7,7,7,0.85) 75%, rgba(7,7,7,1) 100%);
@@ -103,7 +105,7 @@
             z-index: 100;
             display: grid;
             place-items: center;
-            background: #030806;
+            background: radial-gradient(circle at center, #111 0%, #070707 38%, #000000 100%);
             opacity: 0;
             visibility: hidden;
             pointer-events: none;
@@ -119,19 +121,19 @@
         }
         .splash-mark {
             color: transparent;
-            background: linear-gradient(115deg, #064e3b 10%, #10b981 38%, #d1fae5 50%, #059669 62%, #064e3b 90%);
-            background-size: 240% 100%;
+            background: linear-gradient(115deg, #2b0003 0%, #7f0d14 18%, #e50914 38%, #ff4d5d 52%, #b20710 70%, #2b0003 100%);
+            background-size: 220% 100%;
             background-clip: text;
             -webkit-background-clip: text;
             font-size: min(48vw, 320px);
             font-weight: 900;
             line-height: 0.8;
-            animation: emeraldSweep 1.8s linear infinite;
-            filter: drop-shadow(0 0 18px rgba(16,185,129,0.36));
+            animation: redSweep 1.1s ease-in-out infinite alternate;
+            filter: drop-shadow(0 0 18px rgba(229, 9, 20, 0.35));
         }
-        @keyframes emeraldSweep {
-            from { background-position: 100% 0; }
-            to { background-position: -140% 0; }
+        @keyframes redSweep {
+            0% { background-position: 100% 0; opacity: 0.88; transform: scale(0.98); }
+            100% { background-position: 0% 0; opacity: 1; transform: scale(1); }
         }
         @media (prefers-reduced-motion: reduce) {
             .app-splash, .splash-mark { transition: none; animation: none; }
