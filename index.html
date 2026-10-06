@@ -692,7 +692,10 @@
         let watchlist = JSON.parse(localStorage.getItem('venus_watchlist_tv') || '[]');
         let currentSelectedItem = null;
         let currentHls = null;
-        let batchSize = 20;
+        let batchSize = 10;
+        let currentGroupedCatalog = [];
+        let renderedCategoryCount = 0;
+        const CATEGORY_BATCH_SIZE = 6;
         let currentSearchQuery = '';
         let searchMatches = [];
         let searchRenderCount = 0;
@@ -719,6 +722,7 @@
         const scrollAnimationFrames = new WeakMap();
         let catalogSearchIndex = [];
         let lazyImageObserver = null;
+        const catalogRows = new Map();
         const SEARCH_BATCH_SIZE = 40;
         const normalizeSearchText = value => (value || '').toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         const scheduleSearch = debounce(executeSearch, 220);
@@ -1200,11 +1204,12 @@
 
         async function loadMoviesEndpoint() {
             try {
-                const catData = await requestXtreamData('get_vod_categories');
+                const [catData, streamData] = await Promise.all([
+                    requestXtreamData('get_vod_categories'),
+                    requestXtreamData('get_vod_streams')
+                ]);
                 let catMap = {};
                 if (Array.isArray(catData)) catData.forEach(c => { catMap[c.category_id] = c.category_name; });
-
-                const streamData = await requestXtreamData('get_vod_streams');
 
                 if (Array.isArray(streamData)) {
                     catalogData.movies = streamData.map(item => ({
@@ -1236,11 +1241,12 @@
 
         async function loadSeriesEndpoint() {
             try {
-                const catData = await requestXtreamData('get_series_categories');
+                const [catData, streamData] = await Promise.all([
+                    requestXtreamData('get_series_categories'),
+                    requestXtreamData('get_series')
+                ]);
                 let catMap = {};
                 if (Array.isArray(catData)) catData.forEach(c => { catMap[c.category_id] = c.category_name; });
-
-                const streamData = await requestXtreamData('get_series');
 
                 if (Array.isArray(streamData)) {
                     catalogData.series = streamData.map(item => ({
@@ -1409,7 +1415,10 @@
 
         function renderCurrentCatalog() {
             const container = document.getElementById('catalogContainer');
-            const fragment = document.createDocumentFragment();
+            container.replaceChildren();
+            catalogRows.clear();
+            currentGroupedCatalog = [];
+            renderedCategoryCount = 0;
 
             let itemsToRender = [];
             if (currentPlatformFilter) {
@@ -1428,98 +1437,95 @@
                 return;
             }
 
-            let grouped = {};
+            const grouped = new Map();
             itemsToRender.forEach(item => {
-                let groupName = item.group || (item.type === 'movies' ? 'Filmes Populares' : 'Séries em Destaque');
-                if (!grouped[groupName]) grouped[groupName] = [];
-                grouped[groupName].push(item);
+                const groupName = item.group || (item.type === 'movies' ? 'Filmes Populares' : 'Séries em Destaque');
+                if (!grouped.has(groupName)) grouped.set(groupName, []);
+                grouped.get(groupName).push(item);
             });
+            currentGroupedCatalog = [...grouped.entries()];
+            appendNextCatalogGroups();
+        }
 
-            Object.keys(grouped).forEach(groupName => {
-                const groupItems = grouped[groupName];
-                const displayedItems = groupItems.slice(0, batchSize);
-                const hasMore = groupItems.length > batchSize;
+        function appendNextCatalogGroups() {
+            const container = document.getElementById('catalogContainer');
+            container.querySelector('[data-nav-id="more-categories"]')?.remove();
+            const fragment = document.createDocumentFragment();
+            const end = Math.min(renderedCategoryCount + CATEGORY_BATCH_SIZE, currentGroupedCatalog.length);
 
-                const rowDiv = document.createElement('div');
-                rowDiv.className = 'space-y-2.5';
+            while (renderedCategoryCount < end) {
+                const [groupName, groupItems] = currentGroupedCatalog[renderedCategoryCount++];
+                const row = createCatalogRow(groupName, groupItems);
+                catalogRows.set(row.id, groupItems);
+                fragment.appendChild(row);
+            }
 
-                rowDiv.innerHTML = `
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-xs lg:text-sm font-bold text-white tracking-wide">${groupName} <span class="text-[10px] font-normal text-gray-400">(${groupItems.length})</span></h2>
-                    </div>
-                    <div class="relative">
-                        <div id="row-${sanitizeId(groupName)}" class="carousel-track flex space-x-3.5 overflow-x-auto no-scrollbar">
-                            ${displayedItems.map(item => `
-                                <div data-nav-id="card-${item.id}" onclick='openDetailsModalById("${item.id}", "${item.type}")' class="tv-focusable card-item flex-none w-40 bg-[#141414] rounded-xl overflow-hidden cursor-pointer relative group/card border border-gray-800/80">
-                                    <div class="h-60 w-full bg-[#181818] relative skeleton">
-                                        <img data-src="${item.logo}" alt="${item.name}" decoding="async" class="h-full w-full object-cover opacity-0">
-                                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover/card:opacity-100 transition flex items-center justify-center">
-                                            <div class="bg-venus-red text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg">
-                                                <i class="fa-solid fa-play text-sm ml-0.5"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="p-2.5 bg-[#141414]">
-                                        <p class="text-xs font-medium text-gray-200 truncate">${item.name}</p>
-                                    </div>
-                                </div>
-                            `).join('')}
-                            ${hasMore ? `
-                                <div data-nav-id="more-${sanitizeId(groupName)}" onclick="loadMoreRow('${sanitizeId(groupName)}', ${JSON.stringify(groupItems).replace(/\"/g, '&quot;')})" class="tv-focusable card-item flex-none w-40 bg-gray-900/90 rounded-xl overflow-hidden cursor-pointer transition flex flex-col items-center justify-center border border-gray-800 text-center p-3">
-                                    <i class="fa-solid fa-circle-plus text-xl text-venus-red mb-1"></i>
-                                    <span class="text-xs font-bold text-gray-200">Mais (+20)</span>
-                                </div>
-                            ` : ''}
-                        </div>
-                    </div>
-                `;
-                fragment.appendChild(rowDiv);
-            });
-            container.replaceChildren(fragment);
+            if (renderedCategoryCount < currentGroupedCatalog.length) {
+                const moreButton = document.createElement('button');
+                moreButton.type = 'button';
+                moreButton.dataset.navId = 'more-categories';
+                moreButton.className = 'tv-focusable w-full py-4 rounded-lg bg-gray-900 text-sm font-bold text-gray-200 border border-gray-800';
+                moreButton.textContent = `Mais categorias (${currentGroupedCatalog.length - renderedCategoryCount})`;
+                moreButton.onclick = appendNextCatalogGroups;
+                fragment.appendChild(moreButton);
+            }
+
+            container.appendChild(fragment);
             observeLazyImages(container);
+            updateFocusables();
+        }
+
+        function createCatalogRow(groupName, groupItems) {
+            const rowId = `row-${sanitizeId(groupName)}`;
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'space-y-2.5';
+            const heading = document.createElement('h2');
+            heading.className = 'text-xs lg:text-sm font-bold text-white tracking-wide';
+            heading.textContent = `${groupName} (${groupItems.length})`;
+
+            const track = document.createElement('div');
+            track.id = rowId;
+            track.className = 'carousel-track flex space-x-3.5 overflow-x-auto no-scrollbar';
+            groupItems.slice(0, batchSize).forEach(item => track.appendChild(createCatalogCard(item)));
+            if (groupItems.length > batchSize) track.appendChild(createMoreItemsCard(rowId));
+
+            rowDiv.append(heading, track);
+            return rowDiv;
+        }
+
+        function createCatalogCard(item) {
+            const card = document.createElement('div');
+            card.dataset.navId = `card-${item.id}`;
+            card.className = 'tv-focusable card-item flex-none w-40 bg-[#141414] rounded-xl overflow-hidden cursor-pointer relative group/card border border-gray-800/80';
+            card.onclick = () => openDetailsModalById(item.id, item.type);
+            card.innerHTML = `<div class="h-60 w-full bg-[#181818] relative skeleton"><img data-src="${item.logo}" alt="${item.name}" decoding="async" class="h-full w-full object-cover opacity-0"><div class="absolute inset-0 bg-black/50 opacity-0 group-hover/card:opacity-100 transition flex items-center justify-center"><div class="bg-venus-red text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg"><i class="fa-solid fa-play text-sm ml-0.5"></i></div></div></div><div class="p-2.5 bg-[#141414]"><p class="text-xs font-medium text-gray-200 truncate">${item.name}</p></div>`;
+            return card;
+        }
+
+        function createMoreItemsCard(rowId) {
+            const card = document.createElement('div');
+            card.dataset.navId = `more-${rowId}`;
+            card.className = 'tv-focusable card-item flex-none w-40 bg-gray-900/90 rounded-xl overflow-hidden cursor-pointer flex flex-col items-center justify-center border border-gray-800 text-center p-3';
+            card.innerHTML = '<i class="fa-solid fa-circle-plus text-xl text-venus-red mb-1"></i><span class="text-xs font-bold text-gray-200">Mais títulos</span>';
+            card.onclick = () => loadMoreRow(rowId);
+            return card;
         }
 
         function sanitizeId(str) { return str.replace(/[^a-zA-Z0-9]/g, '_'); }
 
-        function loadMoreRow(rowId, allItems) {
+        function loadMoreRow(rowId) {
             const container = document.getElementById(`row-${rowId}`);
-            if (!container) return;
-            container.lastElementChild.remove();
+            const allItems = catalogRows.get(rowId);
+            if (!container || !allItems) return;
+            container.querySelector(`[data-nav-id="more-${rowId}"]`)?.remove();
             const currentCount = container.children.length;
             const nextBatch = allItems.slice(currentCount, currentCount + batchSize);
 
             const fragment = document.createDocumentFragment();
-            nextBatch.forEach(item => {
-                const card = document.createElement('div');
-                card.className = "tv-focusable card-item flex-none w-40 bg-[#141414] rounded-xl overflow-hidden cursor-pointer relative group/card border border-gray-800/80";
-                card.setAttribute('data-nav-id', `card-${item.id}`);
-                card.onclick = () => openDetailsModalById(item.id, item.type);
-                card.innerHTML = `
-                    <div class="h-60 w-full bg-[#181818] relative skeleton">
-                        <img data-src="${item.logo}" alt="${item.name}" decoding="async" class="h-full w-full object-cover opacity-0">
-                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover/card:opacity-100 transition flex items-center justify-center">
-                            <div class="bg-venus-red text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg">
-                                <i class="fa-solid fa-play text-sm ml-0.5"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="p-2.5 bg-[#141414]">
-                        <p class="text-xs font-medium text-gray-200 truncate">${item.name}</p>
-                    </div>
-                `;
-                fragment.appendChild(card);
-            });
+            nextBatch.forEach(item => fragment.appendChild(createCatalogCard(item)));
 
             if (currentCount + batchSize < allItems.length) {
-                const moreCard = document.createElement('div');
-                moreCard.className = "tv-focusable card-item flex-none w-40 bg-gray-900/90 rounded-xl overflow-hidden cursor-pointer transition flex flex-col items-center justify-center border border-gray-800 text-center p-3";
-                moreCard.dataset.navId = `more-${rowId}`;
-                moreCard.onclick = () => loadMoreRow(rowId, allItems);
-                moreCard.innerHTML = `
-                    <i class="fa-solid fa-circle-plus text-xl text-venus-red mb-1"></i>
-                    <span class="text-xs font-bold text-gray-200">Mais (+20)</span>
-                `;
-                fragment.appendChild(moreCard);
+                fragment.appendChild(createMoreItemsCard(rowId));
             }
             container.appendChild(fragment);
             observeLazyImages(container);
