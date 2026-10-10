@@ -7,6 +7,7 @@
     <title>Vênus Cine - Filmes e Séries TV</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://image.tmdb.org" crossorigin>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script>
@@ -55,27 +56,24 @@
             transition: transform 150ms ease-out, opacity 150ms ease-out, border-color 150ms ease-out, box-shadow 150ms ease-out !important;
         }
         .tv-focusable.focused {
-            outline: 3px solid #ffffff !important;
-            outline-offset: 3px !important;
+            outline: none !important;
             border-color: #ffffff !important;
-            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.88), 0 0 22px rgba(255, 255, 255, 0.8), 0 12px 32px rgba(0, 0, 0, 0.8) !important;
-            transform: scale(1.08) !important;
-            z-index: 110 !important;
+            box-shadow: 0 0 0 3px #ffffff, 0 8px 24px rgba(0, 0, 0, 0.8) !important;
+            transform: scale(1.06) !important;
+            z-index: 10 !important;
         }
         .kb-key.focused {
             background-color: #E50914 !important;
             color: #ffffff !important;
-        }
-        #platformFilterList .focused {
-            box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.95), 0 0 18px rgba(229, 9, 20, 0.28) !important;
         }
         .hero-gradient {
             background: linear-gradient(180deg, rgba(7,7,7,0) 25%, rgba(7,7,7,0.85) 75%, rgba(7,7,7,1) 100%);
         }
         .home-hero {
             position: relative;
-            height: min(72vh, 760px);
-            min-height: 470px;
+            height: 50vh;
+            max-height: 520px;
+            min-height: 380px;
             overflow: hidden;
             background: #070707;
         }
@@ -101,15 +99,15 @@
         }
         .home-hero__logo {
             display: block;
-            max-width: min(400px, 100%);
-            max-height: 120px;
+            max-width: min(320px, 100%);
+            max-height: 90px;
             object-fit: contain;
             object-position: left center;
             margin-bottom: 18px;
         }
         .home-hero__title {
             margin: 0 0 18px;
-            font-size: 42px;
+            font-size: 36px;
             line-height: 1.05;
             font-weight: 800;
         }
@@ -121,18 +119,15 @@
         .home-hero__dots { position: absolute; z-index: 3; bottom: 20px; left: 50%; display: flex; align-items: center; gap: 10px; transform: translateX(-50%); }
         .home-hero__dot { width: 9px; height: 9px; padding: 0; border: 0; border-radius: 50%; background: rgba(255,255,255,.5); }
         .home-hero__dot.is-active { width: 22px; border-radius: 8px; background: #fff; }
-        .home-collection-title { margin: 0; font-size: 22px; font-weight: 700; }
-        .home-poster-card { width: 200px !important; min-width: 200px !important; border-radius: 8px !important; }
-        .home-poster-card > .home-poster-media { height: 300px !important; }
-        .home-poster-card.focused { outline: 3px solid #fff !important; outline-offset: 2px !important; border-color: #fff !important; box-shadow: none !important; background-color: #141414 !important; transform: scale(1.05) !important; }
+        .home-collection-title { margin: 0; font-size: 18px; font-weight: 700; }
+        .home-poster-card { width: 140px !important; min-width: 140px !important; border-radius: 8px !important; }
         .home-collection-track { gap: 12px; }
         @media (max-width: 700px) {
-            .home-hero { height: 70vh; min-height: 480px; }
+            .home-hero { height: 50vh; min-height: 380px; }
             .home-hero__content { inset: auto 6% 62px; width: 88%; }
-            .home-hero__title { font-size: 34px; }
-            .home-hero__logo { max-width: min(300px, 85%); max-height: 90px; }
+            .home-hero__title { font-size: 36px; }
+            .home-hero__logo { max-width: min(320px, 85%); max-height: 90px; }
             .home-poster-card { width: 140px !important; min-width: 140px !important; }
-            .home-poster-card > .home-poster-media { height: 210px !important; }
         }
         .card-item {
             width: 8rem !important;
@@ -243,14 +238,6 @@
             position: relative;
             z-index: 2;
             max-width: 760px;
-        }
-        .details-title-logo {
-            display: block;
-            max-width: min(48vw, 420px);
-            max-height: 128px;
-            object-fit: contain;
-            object-position: left center;
-            margin: 0 0 1rem;
         }
         .details-metadata {
             display: flex;
@@ -489,21 +476,20 @@
                 min-width: 0;
                 flex: 1;
             }
-            .details-title-logo {
-                max-width: min(75vw, 360px);
-                max-height: 96px;
-            }
             .details-metadata {
                 gap: 0.55rem;
                 font-size: 0.7rem;
             }
         }
     </style>
-    <link rel="stylesheet" href="/css/styles.css">
-    <script defer src="/js/components/spatial-nav.js"></script>
+    <link rel="stylesheet" href="/css/styles.css?v=tv-home-design-20261010-3">
+    <script defer src="/js/components/spatial-nav.js?v=tv-home-design-20261010-3"></script>
     <script defer src="/js/components/skeleton.js"></script>
     <script defer src="/js/components/slider.js"></script>
-    <script defer src="/js/components/card.js"></script>
+    <script defer src="/js/components/card.js?v=tv-home-design-20261010-3"></script>
+    <script defer src="/js/components/topbar.js"></script>
+    <script defer src="/js/api/catalog.js"></script>
+    <script defer src="/js/pages/search.js"></script>
     <script defer src="/js/pages/home.js"></script>
 </head>
 <body class="h-screen w-screen flex flex-col overflow-hidden bg-[#070707]">
@@ -513,22 +499,20 @@
     </div>
 
 
-    <nav id="navbar" class="topbar">
-        <span class="topbar__brand">VÊNUS CINE</span>
-        <div class="topbar__links">
-            <button data-nav-id="tab-home" data-focusable="true" onclick="switchTab('home')" id="nav-home" class="tv-focusable nav-link active">Início</button>
-            <button data-nav-id="tab-movies" data-focusable="true" onclick="switchTab('movies')" id="nav-movies" class="tv-focusable nav-link">Filmes</button>
-            <button data-nav-id="tab-series" data-focusable="true" onclick="switchTab('series')" id="nav-series" class="tv-focusable nav-link">Séries</button>
-            <button data-nav-id="tab-watchlist" data-focusable="true" onclick="switchTab('watchlist')" id="nav-watchlist" class="tv-focusable nav-link">Minha Lista</button>
+    <nav id="navbar" class="topbar" aria-label="Navegação principal">
+        <div class="topbar-left">
+            <span class="topbar__brand">VÊNUS CINE</span>
         </div>
-        <div class="topbar__actions">
-            <button data-nav-id="btn-search-trigger" data-focusable="true" onclick="openSearchModal()" class="tv-focusable topbar__icon-button" title="Pesquisar" aria-label="Pesquisar">
+        <div class="topbar-center">
+            <button type="button" data-nav-id="btn-search-trigger" class="tv-focusable topbar-icon-btn" onclick="openSearchModal()" title="Pesquisar" aria-label="Pesquisar">
                 <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
             </button>
-            <button data-nav-id="btn-profile" data-focusable="true" onclick="openSettingsModal()" class="tv-focusable topbar__icon-button" title="Configurações" aria-label="Configurações">
-                <i class="fa-solid fa-user" aria-hidden="true"></i>
-            </button>
+            <button type="button" data-nav-id="tab-home" data-route="home" id="nav-home" class="tv-focusable topbar-link nav-link" onclick="switchTab('home')" aria-current="page"><i class="fa-solid fa-house" aria-hidden="true"></i><span>Início</span></button>
+            <button type="button" data-nav-id="tab-series" data-route="series" id="nav-series" class="tv-focusable topbar-link nav-link" onclick="switchTab('series')"><i class="fa-solid fa-tv" aria-hidden="true"></i><span>Séries</span></button>
+            <button type="button" data-nav-id="tab-movies" data-route="movies" id="nav-movies" class="tv-focusable topbar-link nav-link" onclick="switchTab('movies')"><i class="fa-solid fa-film" aria-hidden="true"></i><span>Filmes</span></button>
+            <button type="button" data-nav-id="tab-watchlist" data-route="watchlist" id="nav-watchlist" class="tv-focusable topbar-link nav-link" onclick="switchTab('watchlist')"><i class="fa-solid fa-bookmark" aria-hidden="true"></i><span>Minha Lista</span></button>
         </div>
+        <div class="topbar-right" aria-hidden="true"></div>
     </nav>
 
 
@@ -557,8 +541,8 @@
             <div id="heroDots" class="home-hero__dots" aria-label="Navegação dos destaques"></div>
         </section>
 
-        <section id="platformBrowse" class="px-8 mt-5" aria-label="Categorias por plataforma">
-            <h2 class="text-xs lg:text-sm font-bold text-white tracking-wide mb-2.5">PLATAFORMAS</h2>
+        <section id="platformBrowse" class="hidden px-8 mt-5" aria-label="Categorias">
+            <h2 class="text-xs lg:text-sm font-bold text-white tracking-wide mb-2.5">CATEGORIAS</h2>
             <div id="platformFilterList" class="flex gap-3 overflow-x-auto no-scrollbar"></div>
         </section>
 
@@ -567,99 +551,19 @@
             <div class="space-y-2.5">
                 <div class="h-4 w-44 skeleton rounded"></div>
                 <div class="flex space-x-3.5 overflow-x-auto no-scrollbar pb-2">
-                    <div class="flex-none w-40 h-60 skeleton rounded-xl"></div>
-                    <div class="flex-none w-40 h-60 skeleton rounded-xl"></div>
-                    <div class="flex-none w-40 h-60 skeleton rounded-xl"></div>
-                    <div class="flex-none w-40 h-60 skeleton rounded-xl"></div>
-                    <div class="flex-none w-40 h-60 skeleton rounded-xl"></div>
+                    <div class="catalog-skeleton-card skeleton"></div>
+                    <div class="catalog-skeleton-card skeleton"></div>
+                    <div class="catalog-skeleton-card skeleton"></div>
+                    <div class="catalog-skeleton-card skeleton"></div>
+                    <div class="catalog-skeleton-card skeleton"></div>
                 </div>
             </div>
         </div>
     </main>
 
 
-    <!-- SEARCH MODAL - AJUSTADO PARA LAYOUT LADO A LADO -->
-    <div id="searchModal" class="fixed inset-0 z-50 bg-[#070707]/95 backdrop-blur-md flex flex-col p-6 lg:p-8 hidden">
-        <div class="flex items-center justify-between pb-3 border-b border-gray-800">
-            <h2 class="text-sm font-bold text-white tracking-wider flex items-center space-x-2">
-                <i class="fa-solid fa-magnifying-glass text-venus-red"></i>
-                <span>Pesquisa Vênus Cine</span>
-            </h2>
-            <button data-nav-id="close-search" onclick="closeSearchModal()" class="tv-focusable bg-gray-800 hover:bg-gray-700 text-white w-8 h-8 rounded-full flex items-center justify-center transition cursor-pointer">
-                <i class="fa-solid fa-xmark text-xs"></i>
-            </button>
-        </div>
-
-
-        <!-- Grid Principal: teclado à esquerda e resultados à direita -->
-        <div class="grid grid-cols-12 gap-5 pt-5 flex-grow overflow-hidden w-full h-full min-h-0">
-
-            <div class="col-span-4 flex flex-col justify-start space-y-3 bg-[#141414] p-3 rounded-2xl border border-gray-800/80 shadow-xl max-h-[calc(100vh-120px)] min-h-0">
-                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center mb-1">Teclado Virtual</div>
-
-                <div class="grid grid-cols-5 gap-2">
-                    <button data-nav-id="kb-A" onclick="appendSearchChar('A')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">A</button>
-                    <button data-nav-id="kb-B" onclick="appendSearchChar('B')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">B</button>
-                    <button data-nav-id="kb-C" onclick="appendSearchChar('C')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">C</button>
-                    <button data-nav-id="kb-D" onclick="appendSearchChar('D')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">D</button>
-                    <button data-nav-id="kb-E" onclick="appendSearchChar('E')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">E</button>
-
-                    <button data-nav-id="kb-F" onclick="appendSearchChar('F')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">F</button>
-                    <button data-nav-id="kb-G" onclick="appendSearchChar('G')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">G</button>
-                    <button data-nav-id="kb-H" onclick="appendSearchChar('H')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">H</button>
-                    <button data-nav-id="kb-I" onclick="appendSearchChar('I')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">I</button>
-                    <button data-nav-id="kb-J" onclick="appendSearchChar('J')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">J</button>
-
-                    <button data-nav-id="kb-K" onclick="appendSearchChar('K')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">K</button>
-                    <button data-nav-id="kb-L" onclick="appendSearchChar('L')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">L</button>
-                    <button data-nav-id="kb-M" onclick="appendSearchChar('M')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">M</button>
-                    <button data-nav-id="kb-N" onclick="appendSearchChar('N')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">N</button>
-                    <button data-nav-id="kb-O" onclick="appendSearchChar('O')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">O</button>
-
-                    <button data-nav-id="kb-P" onclick="appendSearchChar('P')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">P</button>
-                    <button data-nav-id="kb-Q" onclick="appendSearchChar('Q')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">Q</button>
-                    <button data-nav-id="kb-R" onclick="appendSearchChar('R')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">R</button>
-                    <button data-nav-id="kb-S" onclick="appendSearchChar('S')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">S</button>
-                    <button data-nav-id="kb-T" onclick="appendSearchChar('T')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">T</button>
-
-                    <button data-nav-id="kb-U" onclick="appendSearchChar('U')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">U</button>
-                    <button data-nav-id="kb-V" onclick="appendSearchChar('V')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">V</button>
-                    <button data-nav-id="kb-W" onclick="appendSearchChar('W')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">W</button>
-                    <button data-nav-id="kb-X" onclick="appendSearchChar('X')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">X</button>
-                    <button data-nav-id="kb-Y" onclick="appendSearchChar('Y')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">Y</button>
-
-                    <button data-nav-id="kb-Z" onclick="appendSearchChar('Z')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">Z</button>
-                    <button data-nav-id="kb-0" onclick="appendSearchChar('0')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">0</button>
-                    <button data-nav-id="kb-1" onclick="appendSearchChar('1')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">1</button>
-                    <button data-nav-id="kb-2" onclick="appendSearchChar('2')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">2</button>
-                    <button data-nav-id="kb-3" onclick="appendSearchChar('3')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition">3</button>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3 pt-2">
-                    <button data-nav-id="kb-space" onclick="appendSearchChar(' ')" class="tv-focusable kb-key bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 rounded-xl text-[10px] transition flex items-center justify-center space-x-2 border border-gray-700">
-                        <i class="fa-solid fa-minus text-[9px]"></i>
-                        <span>ESPAÇO</span>
-                    </button>
-                    <button data-nav-id="kb-back" onclick="backspaceSearchChar()" class="tv-focusable kb-key bg-venus-red hover:bg-venus-darkred text-white font-bold py-2.5 rounded-xl text-[10px] transition flex items-center justify-center space-x-2 shadow-lg">
-                        <i class="fa-solid fa-delete-left text-[9px]"></i>
-                        <span>APAGAR</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="col-span-8 flex flex-col h-full overflow-hidden space-y-4 min-h-0">
-                <div class="flex items-center space-x-3 bg-black/60 px-5 py-4 rounded-xl border border-gray-800 shadow-inner">
-                    <i class="fa-solid fa-magnifying-glass text-venus-red text-lg"></i>
-                    <div id="searchQueryDisplay" tabindex="0" class="tv-focusable text-lg font-bold text-white tracking-wide min-h-[28px] flex items-center">Digite o título...</div>
-                </div>
-
-                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Resultados da Pesquisa</h3>
-                <div id="searchResultsContainer" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 overflow-y-auto no-scrollbar flex-grow pr-2 min-h-0">
-                    <div class="text-gray-500 text-xs col-span-full py-12 text-center">Digite algo no teclado para buscar filmes ou séries.</div>
-                </div>
-            </div>
-
-        </div>
+    <div id="searchModal" class="search-modal hidden" role="dialog" aria-label="Pesquisa Vênus Cine" aria-modal="true">
+        <div id="searchApp" class="search-app"></div>
     </div>
 
 
@@ -683,17 +587,33 @@
 
     <section id="detailsPage" class="details-page hidden" aria-label="Detalhes do título">
         <div class="netflix-details-shell">
-            <button data-nav-id="close-details" onclick="closeDetailsModal()" class="tv-focusable details-back-button">
+            <button data-nav-id="close-details" aria-label="Voltar aos títulos" onclick="closeDetailsModal()" class="tv-focusable details-back-button">
                 <i class="fa-solid fa-arrow-left"></i>
                 <span>Voltar</span>
             </button>
 
+            <div id="detailsSkeleton" class="details-skeleton" role="status" aria-label="Carregando detalhes">
+                <div class="sk-banner"></div>
+                <div class="sk-content">
+                    <div class="sk-logo"></div>
+                    <div class="sk-line sk-line-60"></div>
+                    <div class="sk-line sk-line-40"></div>
+                    <div class="sk-line sk-line-80"></div>
+                    <div class="sk-line sk-line-100"></div>
+                    <div class="sk-line sk-line-70"></div>
+                </div>
+            </div>
+
+            <div id="detailsContent" hidden>
             <div id="modalBackdrop" class="netflix-details-cover">
                 <div class="netflix-details-content">
                     <div class="detail-badges">
                         <span id="modalGroup" class="detail-pill detail-pill--muted">Categoria</span>
                     </div>
-                    <img id="modalTitleLogo" class="details-title-logo hidden" alt="" loading="lazy">
+                    <div id="modalTitleLogoWrap" class="logo-wrapper" hidden>
+                        <div class="sk-logo-placeholder" aria-hidden="true"></div>
+                        <img id="modalTitleLogo" class="details-logo" alt="" loading="eager" fetchpriority="high">
+                    </div>
                     <h2 id="modalTitle" class="netflix-title">Título</h2>
 
                     <div class="details-metadata" aria-label="Informações do título">
@@ -750,48 +670,19 @@
                     <p>Os comentários deste título não estão disponíveis.</p>
                 </section>
             </div>
+            </div>
         </div>
     </section>
 
 
-    <div id="settingsModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-        <div class="bg-[#141414] w-full max-w-md rounded-2xl p-5 space-y-4 shadow-2xl border border-gray-800">
-            <div class="flex justify-between items-center">
-                <h3 class="text-xs font-bold text-white flex items-center space-x-2">
-                    <i class="fa-solid fa-server text-venus-red"></i>
-                    <span>Configuração da URL M3U</span>
-                </h3>
-                <button data-nav-id="close-settings" onclick="closeSettingsModal()" class="tv-focusable text-gray-400 hover:text-white cursor-pointer p-1">
-                    <i class="fa-solid fa-xmark text-base"></i>
-                </button>
-            </div>
-
-            <div class="space-y-2 text-xs text-gray-300">
-                <label id="xtreamUrlLabel" for="xtreamUrlInput" class="block text-[10px] font-semibold text-gray-400 uppercase">URL M3U / Xtream API</label>
-                <input type="text" id="xtreamUrlInput" class="tv-focusable w-full bg-black/60 border border-gray-700 rounded-xl px-3.5 py-2 text-white focus:outline-none text-xs font-mono">
-                <p class="text-[9px] text-gray-500 pt-0.5">O sistema extrai exclusivamente filmes e séries.</p>
-            </div>
-
-
-            <div class="flex justify-end space-x-2.5 pt-2.5 border-t border-gray-800">
-                <button data-nav-id="settings-cancel" onclick="closeSettingsModal()" class="tv-focusable bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-xl text-xs font-semibold text-white transition cursor-pointer">Cancelar</button>
-                <button data-nav-id="settings-save" onclick="saveAndReload()" class="tv-focusable bg-venus-red hover:bg-venus-darkred px-5 py-2 rounded-xl text-xs font-semibold text-white transition shadow cursor-pointer">Salvar e Conectar</button>
-            </div>
-        </div>
-    </div>
-
-
     <script>
-        const DEFAULT_URL = '';
-
-        let config = { host: '', username: '', password: '', playerApi: '', movieBase: '', seriesBase: '', proxy: false };
-        let apiConnectionError = '';
         let currentTab = 'home';
         let catalogData = { movies: [], series: [] };
         let homeDashboard = null;
         let homeHeroSlides = [];
         let activeHomeHeroItem = null;
         let seriesInfoCache = {};
+        const detailsInfoCache = new Map();
         let watchlist = JSON.parse(localStorage.getItem('venus_watchlist_tv') || '[]');
         let currentSelectedItem = null;
         let currentHls = null;
@@ -799,41 +690,24 @@
         let batchSize = MAX_CARDS_PER_ROW;
         let currentGroupedCatalog = [];
         let renderedCategoryCount = 0;
-        let currentSearchQuery = '';
-        let searchMatches = [];
-        let searchRenderCount = 0;
-        let currentPlatformFilter = null;
-        const androidXtreamRequests = new Map();
-        const androidConfigRequests = new Map();
-        const platformFilters = [
-            { id: 'netflix', label: 'Netflix', image: 'img/NETFLIX_NV.jpg', match: /NETFLIX/i },
-            { id: 'prime', label: 'Prime Video', image: 'img/Amazon-prime-video.jpg', match: /PRIME/i },
-            { id: 'disney', label: 'Disney+', image: 'img/disney.png', match: /DISNEY/i },
-            { id: 'apple-tv', label: 'Apple TV+', image: 'img/apple-tv.png', match: /APPLE\s?TV/i },
-            { id: 'hbo-max', label: 'HBO Max', image: 'img/hbomax.png', match: /HBO\s?MAX/i },
-            { id: 'paramount', label: 'Paramount+', image: 'img/paramount.jpg', match: /PARAMOUNT/i },
-            { id: 'globoplay', label: 'Globoplay', image: 'img/globoplay.png', match: /GLOBOPLAY/i },
-            { id: 'anime', label: 'Animes', image: 'img/animes_nv.png', match: /ANIME/i },
-            { id: 'dorama', label: 'Doramas', image: 'img/doramas_nv.png', match: /DORAMA/i }
-        ];
-
+        let catalogCategories = { filmes: [], series: [] };
+        let currentCatalogCategory = '';
         let focusableElements = [];
         let currentFocusIndex = 0;
         let focusedElement = null;
         let focusFrame = 0;
         let focusRefreshFrame = 0;
         const scrollAnimationFrames = new WeakMap();
-        let catalogSearchIndex = [];
+        const catalogApiPages = {
+            movies: { page: 0, hasNext: false, category: '' },
+            series: { page: 0, hasNext: false, category: '' }
+        };
         let lazyImageObserver = null;
         const catalogRows = new Map();
         const CATALOG_CACHE_DB = 'venus-cine-catalog';
         const CATALOG_CACHE_STORE = 'catalog';
-        const CATALOG_CACHE_KEY = 'xtream-catalog-v1';
+        const CATALOG_CACHE_KEY = 'public-api-catalog-v1';
         const CATALOG_CACHE_TTL = 15 * 60 * 1000;
-        const SEARCH_BATCH_SIZE = 40;
-        const normalizeSearchText = value => (value || '').toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        const scheduleSearch = debounce(executeSearch, 220);
-
         let catalogCacheDatabasePromise = null;
         let splashHideTimer = 0;
 
@@ -867,11 +741,8 @@
                         resolve(null);
                         return;
                     }
-                    const movies = cached.movies.map(item => ({
-                        ...item,
-                        url: buildStreamUrl('movie', item.id, item.streamExtension || 'mp4')
-                    }));
-                    const series = cached.series.map(item => ({ ...item, url: null }));
+                    const movies = cached.movies.map(item => ({ ...item, url: item.url || null }));
+                    const series = cached.series.map(item => ({ ...item, url: item.url || null }));
                     resolve({ movies, series, savedAt: Number(cached.savedAt) || 0 });
                 };
                 request.onerror = () => resolve(null);
@@ -881,7 +752,7 @@
         async function writeCatalogCache() {
             const database = await openCatalogCache();
             if (!database) return;
-            const stripStreamUrl = ({ url, ...item }) => item;
+            const stripStreamUrl = ({ url, url_stream, apiItem, ...item }) => item;
             const payload = {
                 savedAt: Date.now(),
                 movies: catalogData.movies.map(stripStreamUrl),
@@ -890,18 +761,6 @@
             await new Promise(resolve => {
                 const transaction = database.transaction(CATALOG_CACHE_STORE, 'readwrite');
                 transaction.objectStore(CATALOG_CACHE_STORE).put(payload, CATALOG_CACHE_KEY);
-                transaction.oncomplete = resolve;
-                transaction.onerror = resolve;
-                transaction.onabort = resolve;
-            });
-        }
-
-        async function clearCatalogCache() {
-            const database = await openCatalogCache();
-            if (!database) return;
-            await new Promise(resolve => {
-                const transaction = database.transaction(CATALOG_CACHE_STORE, 'readwrite');
-                transaction.objectStore(CATALOG_CACHE_STORE).delete(CATALOG_CACHE_KEY);
                 transaction.oncomplete = resolve;
                 transaction.onerror = resolve;
                 transaction.onabort = resolve;
@@ -922,77 +781,6 @@
             clearTimeout(splashHideTimer);
             splash.hidden = false;
             requestAnimationFrame(() => splash.classList.add('is-visible'));
-        }
-
-        function finishAndroidXtreamRequest(requestId, status, responseText) {
-            const pending = androidXtreamRequests.get(requestId);
-            if (!pending) return;
-            clearTimeout(pending.timeoutId);
-            androidXtreamRequests.delete(requestId);
-            let responseData;
-            try {
-                responseData = JSON.parse(responseText);
-            } catch {
-                pending.reject(new Error('Resposta inválida da conexão Android.'));
-                return;
-            }
-            if (status < 200 || status >= 300) {
-                pending.reject(new Error(responseData.error || `Falha da API (${status}).`));
-                return;
-            }
-            pending.resolve(responseData);
-        }
-
-        window.onAndroidXtreamResult = finishAndroidXtreamRequest;
-        window.onAndroidConfigResult = (requestId, status, responseText) => {
-            const pending = androidConfigRequests.get(requestId);
-            if (!pending) return;
-            clearTimeout(pending.timeoutId);
-            androidConfigRequests.delete(requestId);
-            let result;
-            try {
-                result = JSON.parse(responseText);
-            } catch {
-                pending.reject(new Error('Resposta inválida do Firebase.'));
-                return;
-            }
-            if (status < 200 || status >= 300) {
-                pending.reject(new Error(result.error || `Falha ao carregar configuração (${status}).`));
-                return;
-            }
-            pending.resolve(result);
-        };
-        window.onAndroidXtreamChunk = (requestId, status, index, total, chunk) => {
-            const pending = androidXtreamRequests.get(requestId);
-            if (!pending || total < 1 || total > 256 || index < 0 || index >= total) return;
-            if (!pending.chunks) {
-                pending.chunks = new Array(total);
-                pending.chunkCount = 0;
-                pending.status = status;
-            }
-            if (pending.chunks.length !== total || pending.chunks[index] !== undefined) return;
-            pending.chunks[index] = chunk;
-            pending.chunkCount++;
-            if (pending.chunkCount === total) {
-                finishAndroidXtreamRequest(requestId, pending.status, pending.chunks.join(''));
-            }
-        };
-
-        function debounce(callback, delay) {
-            let timerId = 0;
-            const debounced = (...args) => {
-                clearTimeout(timerId);
-                timerId = setTimeout(() => callback(...args), delay);
-            };
-            debounced.cancel = () => clearTimeout(timerId);
-            return debounced;
-        }
-
-        function rebuildCatalogSearchIndex() {
-            catalogSearchIndex = [...catalogData.movies, ...catalogData.series].map(item => ({
-                item,
-                normalizedName: normalizeSearchText(item.name)
-            }));
         }
 
         function initLazyImageObserver() {
@@ -1134,18 +922,27 @@
         function applyDetailsMetadata(item) {
             const title = document.getElementById('modalTitle');
             const titleLogo = document.getElementById('modalTitleLogo');
+            const titleLogoWrap = document.getElementById('modalTitleLogoWrap');
             const logoUrl = item.titleLogo || '';
             title.textContent = item.name || 'Título';
             titleLogo.onerror = () => {
+                titleLogoWrap.classList.remove('loaded');
+                titleLogoWrap.hidden = true;
                 titleLogo.classList.add('hidden');
                 title.classList.remove('hidden');
             };
+            titleLogo.onload = () => titleLogoWrap.classList.add('loaded');
             if (logoUrl) {
+                titleLogoWrap.hidden = false;
+                titleLogoWrap.classList.remove('loaded');
                 titleLogo.src = logoUrl;
                 titleLogo.alt = item.name || 'Logo do título';
                 titleLogo.classList.remove('hidden');
                 title.classList.add('hidden');
+                if (titleLogo.complete && titleLogo.naturalWidth > 0) titleLogoWrap.classList.add('loaded');
             } else {
+                titleLogoWrap.hidden = true;
+                titleLogoWrap.classList.remove('loaded');
                 titleLogo.removeAttribute('src');
                 titleLogo.classList.add('hidden');
                 title.classList.remove('hidden');
@@ -1163,6 +960,19 @@
             document.getElementById('modalCast').textContent = item.cast || 'Elenco não informado';
         }
 
+        function getTitleDetails(item) {
+            if (item.detailLoaded) return Promise.resolve(item);
+            const cacheKey = `${item.type}:${item.id}`;
+            if (!detailsInfoCache.has(cacheKey)) {
+                const request = VenusCatalog.details(item).catch(error => {
+                    detailsInfoCache.delete(cacheKey);
+                    throw error;
+                });
+                detailsInfoCache.set(cacheKey, request);
+            }
+            return detailsInfoCache.get(cacheKey);
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             initLazyImageObserver();
             VenusSpatialNav.init({
@@ -1174,141 +984,25 @@
             catalogPage.addEventListener('scroll', () => {
                 document.getElementById('navbar').classList.toggle('scrolled', catalogPage.scrollTop > 16);
             }, { passive: true });
-            const androidBridge = window.AndroidBridge?.isAvailable?.() === true;
-            const androidConfigured = androidBridge && AndroidBridge.isConfigured();
-            let saved = androidBridge ? '' : (localStorage.getItem('venus_url_tv') || DEFAULT_URL);
-            document.getElementById('xtreamUrlInput').value = saved;
-            parseUrl(saved);
             initApp();
         });
 
-        function parseUrl(urlStr) {
-            if (window.AndroidBridge?.isAvailable?.() === true) {
-                config = {
-                    host: '', username: '', password: '', playerApi: '',
-                    movieBase: '', seriesBase: '', proxy: false, androidBridge: true
-                };
-                return;
-            }
-            if (!urlStr && window.location.protocol !== 'file:') {
-                config = {
-                    host: window.location.origin,
-                    username: '',
-                    password: '',
-                    playerApi: '/api/xtream',
-                    movieBase: '',
-                    seriesBase: '',
-                    proxy: true,
-                    androidBridge: false
-                };
-                return;
-            }
-
-            try {
-                const urlObj = new URL(urlStr);
-                const host = urlObj.origin;
-                const params = new URLSearchParams(urlObj.search);
-                const username = params.get('username') || '';
-                const password = params.get('password') || '';
-
-                config = {
-                    host, username, password,
-                    playerApi: `${host}/player_api.php?username=${username}&password=${password}`,
-                    movieBase: `${host}/movie/${username}/${password}/`,
-                    seriesBase: `${host}/series/${username}/${password}/`,
-                    proxy: false,
-                    androidBridge: false
-                };
-            } catch (e) {
-                config = {
-                    host: '', username: '', password: '',
-                    playerApi: '',
-                    movieBase: '',
-                    seriesBase: '',
-                    proxy: false,
-                    androidBridge: false
-                };
-            }
-        }
-
-        function buildXtreamUrl(action, params = {}) {
-            if (config.proxy) {
-                const query = new URLSearchParams({ action, ...params });
-                return `${config.playerApi}?${query}`;
-            }
-            const url = new URL(config.playerApi);
-            url.searchParams.set('action', action);
-            Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
-            return url.toString();
-        }
-
-        function buildStreamUrl(kind, id, extension = 'mp4') {
-            if (config.androidBridge && window.AndroidBridge) {
-                return AndroidBridge.buildStreamUrl(kind, String(id), extension);
-            }
-            if (config.proxy) {
-                const action = kind === 'series' ? 'stream_series' : 'stream_movie';
-                return `${config.playerApi}?${new URLSearchParams({ action, id: String(id), ext: extension })}`;
-            }
-            const base = kind === 'series' ? config.seriesBase : config.movieBase;
-            return `${base}${id}.${extension}`;
-        }
-
-        function showConnectionSetup() {
-            hideAppSplash();
-            document.getElementById('catalogContainer').innerHTML = `
-                <div class="text-center py-12 text-gray-400">
-                    <p class="text-sm mb-4">Configure sua conexão para carregar filmes e séries.</p>
-                    <button data-nav-id="configure-connection" onclick="openSettingsModal()" class="tv-focusable bg-venus-red hover:bg-venus-darkred px-5 py-2.5 rounded-lg text-sm font-bold text-white">Configurar conexão</button>
-                </div>
-            `;
-            updateFocusables();
-            openSettingsModal();
-        }
-
         async function initApp() {
             showAppSplash();
-            const inputElement = document.getElementById('xtreamUrlInput');
-            const enteredUrl = inputElement.value.trim();
-            const hasAndroidBridge = window.AndroidBridge?.isAvailable?.() === true;
-            if (hasAndroidBridge) {
-                if (enteredUrl && !AndroidBridge.saveConnection(enteredUrl)) {
-                    showConnectionSetupError('A URL Xtream informada é inválida. Confira host, usuário e senha.');
-                    return;
-                }
-                if (!AndroidBridge.isConfigured()) {
-                    parseUrl('');
-                    try {
-                        await requestAndroidFirebaseConfig();
-                    } catch (error) {
-                        showProxyConnectionError(error.message || 'Não foi possível carregar config_iptv do Firebase.');
-                        return;
-                    }
-                    if (!AndroidBridge.isConfigured()) {
-                        showProxyConnectionError('O Firebase não retornou uma conexão Xtream válida.');
-                        return;
-                    }
-                }
-                inputElement.value = '';
-                parseUrl('');
-            }
-            const urlInput = enteredUrl || DEFAULT_URL;
-            if (!urlInput && window.location.protocol === 'file:' && !hasAndroidBridge) {
-                parseUrl('');
-                showConnectionSetup();
-                return;
-            }
-            if (urlInput && !hasAndroidBridge) localStorage.setItem('venus_url_tv', urlInput);
-            if (!hasAndroidBridge) parseUrl(urlInput);
-            apiConnectionError = '';
-
+            renderSkeletonState();
             try {
-                const homeRequest = VenusHome.fetchDashboard();
-                hideAppSplash();
-                const payload = await homeRequest;
+                const [payload, categories] = await Promise.all([
+                    VenusHome.fetchDashboard(),
+                    VenusCatalog.categories().catch(error => {
+                        console.warn('[Catalog] categories unavailable:', error);
+                        return { filmes: [], series: [] };
+                    })
+                ]);
+                catalogCategories = {
+                    filmes: Array.isArray(categories.filmes) ? categories.filmes : [],
+                    series: Array.isArray(categories.series) ? categories.series : []
+                };
                 applyHomeDashboard(payload);
-                rebuildCatalogSearchIndex();
-                document.getElementById('platformBrowse').classList.remove('hidden');
                 switchTab('home');
                 setupHomeHero();
                 VenusSkeleton.finishHome(document.getElementById('heroSection'));
@@ -1319,43 +1013,17 @@
                     if (playIndex >= 0) setFocus(playIndex);
                 });
                 void hydrateCatalogData();
-                return;
             } catch (error) {
                 homeDashboard = null;
-                document.getElementById('platformBrowse').classList.remove('hidden');
-            }
-
-            let hasCachedCatalog = false;
-            try {
                 const cached = await readCatalogCache();
                 if (cached) {
                     catalogData = { movies: cached.movies, series: cached.series };
-                    rebuildCatalogSearchIndex();
                     switchTab(currentTab);
-                    setupHero();
                     updateFocusables();
-                    hasCachedCatalog = true;
                     hideAppSplash();
-                    if (Date.now() - cached.savedAt < CATALOG_CACHE_TTL) return;
-                }
-            } catch {}
-
-            if (!hasCachedCatalog) renderSkeletonState();
-
-            try {
-                await Promise.all([loadMoviesEndpoint(), loadSeriesEndpoint()]);
-                if (apiConnectionError && catalogData.movies.length === 0 && catalogData.series.length === 0) {
-                    showProxyConnectionError(apiConnectionError);
                     return;
                 }
-                rebuildCatalogSearchIndex();
-                switchTab(currentTab);
-                setupHero();
-                updateFocusables();
-                if (!apiConnectionError) writeCatalogCache().catch(() => {});
-                hideAppSplash();
-            } catch (err) {
-                loadFallbackOrProxyData(urlInput);
+                showApiConnectionError(error);
             }
         }
 
@@ -1374,6 +1042,7 @@
                 genre: Array.isArray(item.generos) ? item.generos.join(', ') : (item.generos || ''),
                 plot: item.sinopse || '',
                 cast: '',
+                url_stream: item.url_stream || null,
                 url: item.url_stream || null,
                 streamExtension: 'mp4'
             };
@@ -1408,7 +1077,7 @@
             document.getElementById('heroSection').classList.remove('hidden');
             VenusSkeleton.finishHome(document.getElementById('heroSection'));
             VenusSlider.init(homeHeroSlides, {
-                onPlay: item => playItem(item),
+                onPlay: item => item.type === 'series' ? openDetailsModal(item) : playItem(item),
                 onList: item => toggleWatchlist(item.id),
                 onSlide: item => {
                     activeHomeHeroItem = item;
@@ -1424,73 +1093,23 @@
             document.getElementById('heroInfoBtn').setAttribute('aria-label', saved ? 'Remover da Minha Lista' : 'Adicionar à Minha Lista');
         }
 
-        function showConnectionSetupError(message) {
-            const label = document.getElementById('xtreamUrlLabel');
-            if (label) label.textContent = message;
-            document.getElementById('settingsModal').classList.remove('hidden');
-            updateFocusables();
-        }
-
-        function showProxyConnectionError(message) {
+        function showApiConnectionError(error) {
             hideAppSplash();
             const container = document.getElementById('catalogContainer');
             const panel = document.createElement('div');
             panel.className = 'text-center py-12 text-gray-400';
             const errorText = document.createElement('p');
             errorText.className = 'text-sm mb-3';
-            errorText.textContent = message;
-            const setupText = document.createElement('p');
-            setupText.className = 'text-xs';
-            setupText.textContent = config.androidBridge
-                ? 'Confira a conexão Xtream salva neste app e tente novamente.'
-                : 'A conexão Xtream é configurada uma única vez nas variáveis do projeto na Vercel.';
+            errorText.textContent = error?.message || 'Não foi possível carregar o catálogo público.';
             const retryButton = document.createElement('button');
             retryButton.type = 'button';
             retryButton.dataset.navId = 'retry-connection';
             retryButton.className = 'tv-focusable mt-4 bg-venus-red hover:bg-venus-darkred px-5 py-2.5 rounded-lg text-sm font-bold text-white';
             retryButton.textContent = 'Tentar novamente';
             retryButton.onclick = initApp;
-            panel.append(errorText, setupText, retryButton);
+            panel.append(errorText, retryButton);
             container.replaceChildren(panel);
             updateFocusables();
-        }
-
-        async function getApiError(response, fallback) {
-            try {
-                const data = await response.json();
-                if (data && typeof data.error === 'string') return data.error;
-            } catch {}
-            return fallback;
-        }
-
-        async function requestXtreamData(action, params = {}) {
-            if (config.androidBridge && window.AndroidBridge) {
-                const requestId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-                return new Promise((resolve, reject) => {
-                    const timeoutId = setTimeout(() => {
-                        androidXtreamRequests.delete(requestId);
-                        reject(new Error('A conexão com o provedor excedeu 30 segundos.'));
-                    }, 30000);
-                    androidXtreamRequests.set(requestId, { resolve, reject, timeoutId, chunks: null, chunkCount: 0 });
-                    AndroidBridge.requestXtream(requestId, action, JSON.stringify(params));
-                });
-            }
-
-            const response = await fetch(buildXtreamUrl(action, params));
-            if (!response.ok) throw new Error(await getApiError(response, `Falha da API (${response.status}).`));
-            return response.json();
-        }
-
-        function requestAndroidFirebaseConfig() {
-            const requestId = `firebase-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-            return new Promise((resolve, reject) => {
-                const timeoutId = setTimeout(() => {
-                    androidConfigRequests.delete(requestId);
-                    reject(new Error('O Firebase não respondeu em 20 segundos.'));
-                }, 20000);
-                androidConfigRequests.set(requestId, { resolve, reject, timeoutId });
-                AndroidBridge.loadFirebaseConfig(requestId);
-            });
         }
 
         function renderSkeletonState() {
@@ -1502,84 +1121,17 @@
             document.getElementById('heroMeta').innerText = '';
         }
 
-        async function loadMoviesEndpoint() {
-            try {
-                const [catData, streamData] = await Promise.all([
-                    requestXtreamData('get_vod_categories'),
-                    requestXtreamData('get_vod_streams')
-                ]);
-                let catMap = {};
-                if (Array.isArray(catData)) catData.forEach(c => { catMap[c.category_id] = c.category_name; });
-
-                if (Array.isArray(streamData)) {
-                    catalogData.movies = streamData.map(item => ({
-                        id: item.stream_id || item.num,
-                        name: item.name || 'Filme sem Título',
-                        group: catMap[item.category_id] || 'Filmes em Destaque',
-                        logo: item.stream_icon || 'https://placehold.co/200x300/222/fff?text=VênusCine',
-                        titleLogo: item.title_logo || item.logo_title || item.clear_logo || '',
-                        backdrop: item.backdrop_path || item.backdrop || item.backdrop_url || item.background || '',
-                        maturityRating: item.mpaa_rating || item.certification || item.age_rating || item.rating_age || '',
-                        audio: item.audio_codec || item.audio || item.audio_format || '',
-                        duration: item.duration || item.runtime || '',
-                        durationSeconds: item.duration_secs || item.durationSecs || '',
-                        genre: item.genre || item.genres || catMap[item.category_id] || '',
-                        rating: item.rating || item.rating_5based || '',
-                        year: item.year || item.releaseDate || '',
-                        plot: item.plot || 'Sinopse oficial indisponível para este filme.',
-                        cast: item.cast || 'Elenco padrão',
-                        type: 'movies',
-                        streamExtension: item.container_extension || 'mp4',
-                        url: buildStreamUrl('movie', item.stream_id || item.num, item.container_extension || 'mp4')
-                    }));
-                }
-            } catch (e) {
-                apiConnectionError = e.message || 'Falha ao conectar ao serviço Xtream.';
-            }
-        }
-
-        async function loadSeriesEndpoint() {
-            try {
-                const [catData, streamData] = await Promise.all([
-                    requestXtreamData('get_series_categories'),
-                    requestXtreamData('get_series')
-                ]);
-                let catMap = {};
-                if (Array.isArray(catData)) catData.forEach(c => { catMap[c.category_id] = c.category_name; });
-
-                if (Array.isArray(streamData)) {
-                    catalogData.series = streamData.map(item => ({
-                        id: item.series_id || item.num,
-                        name: item.name || 'Série sem Título',
-                        group: catMap[item.category_id] || 'Séries Populares',
-                        logo: item.cover || 'https://placehold.co/200x300/222/fff?text=VênusCine',
-                        titleLogo: item.title_logo || item.logo_title || item.clear_logo || '',
-                        backdrop: item.backdrop_path || item.backdrop || item.backdrop_url || item.background || '',
-                        maturityRating: item.mpaa_rating || item.certification || item.age_rating || item.rating_age || '',
-                        audio: item.audio_codec || item.audio || item.audio_format || '',
-                        duration: item.duration || item.runtime || '',
-                        durationSeconds: item.duration_secs || item.durationSecs || '',
-                        genre: item.genre || item.genres || catMap[item.category_id] || '',
-                        rating: item.rating || item.rating_5based || '',
-                        year: item.releaseDate || item.year || '',
-                        plot: item.plot || 'Sinopse oficial da série.',
-                        cast: item.cast || 'Elenco principal',
-                        type: 'series',
-                        url: null
-                    }));
-                }
-            } catch (e) {
-                apiConnectionError = e.message || 'Falha ao conectar ao serviço Xtream.';
-            }
-        }
-
         async function hydrateCatalogData() {
             const homeItems = [...homeHeroSlides, ...homeDashboard.collections.flatMap(collection => collection.items)];
-            apiConnectionError = '';
             try {
-                await Promise.all([loadMoviesEndpoint(), loadSeriesEndpoint()]);
+                const [moviePage, seriesPage] = await Promise.all([
+                    VenusCatalog.list('movies', 1),
+                    VenusCatalog.list('series', 1)
+                ]);
+                catalogApiPages.movies = { page: moviePage.page, hasNext: moviePage.has_next, category: '' };
+                catalogApiPages.series = { page: seriesPage.page, hasNext: seriesPage.has_next, category: '' };
                 const mergedItems = new Map();
-                [...catalogData.movies, ...catalogData.series].forEach(item => {
+                [...moviePage.items, ...seriesPage.items].forEach(item => {
                     mergedItems.set(`${item.type}:${String(item.id)}`, item);
                 });
                 homeItems.forEach(item => {
@@ -1600,95 +1152,24 @@
                     movies: items.filter(item => item.type !== 'series'),
                     series: items.filter(item => item.type === 'series')
                 };
-                rebuildCatalogSearchIndex();
                 renderPlatformFilters();
-                if (currentTab !== 'home' || currentPlatformFilter) {
+                if (currentTab !== 'home') {
                     renderCurrentCatalog();
                     updateFocusables();
                 }
-                if (!apiConnectionError) writeCatalogCache().catch(() => {});
+                writeCatalogCache().catch(() => {});
                 console.log(`[Home] catalog hydrated: ${catalogData.movies.length} movies, ${catalogData.series.length} series`);
             } catch (error) {
-                console.warn('[Home] background catalog hydration failed:', error);
+                console.warn('[Catalog] public list endpoints unavailable:', error);
+                if (currentTab !== 'home') showApiConnectionError(error);
             }
         }
 
-        async function loadFallbackOrProxyData(url) {
-            if (config.androidBridge || config.proxy) {
-                showProxyConnectionError(apiConnectionError || 'Não foi possível carregar os dados do provedor.');
-                return;
-            }
-            try {
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-                const res = await fetch(proxyUrl);
-                const text = await res.text();
-                parseM3UText(text);
-                rebuildCatalogSearchIndex();
-                switchTab(currentTab);
-                setupHero();
-                updateFocusables();
-                hideAppSplash();
-            } catch (e) {}
-        }
-
-        function parseM3UText(text) {
-            const lines = text.split('\n');
-            let movies = [], series = [];
-            let current = null;
-
-            for (let line of lines) {
-                line = line.trim();
-                if (line.startsWith('#EXTINF:')) {
-                    current = {};
-                    let logoMatch = line.match(/tvg-logo="([^"]*)"/);
-                    current.logo = logoMatch && logoMatch[1] ? logoMatch[1] : 'https://placehold.co/200x300/222/fff?text=VênusCine';
-                    let groupMatch = line.match(/group-title="([^"]*)"/);
-                    current.group = groupMatch && groupMatch[1] ? groupMatch[1] : 'Geral';
-                    let commaIdx = line.lastIndexOf(',');
-                    current.name = commaIdx !== -1 ? line.substring(commaIdx + 1).trim() : 'Filme ou Série';
-                } else if (line && !line.startsWith('#') && current) {
-                    current.url = line;
-                    current.id = Math.random().toString(36).substr(2, 9);
-                    current.plot = `Conteúdo ${current.group} via M3U Stream.`;
-                    current.year = '';
-                    current.rating = '';
-
-                    let upperGroup = current.group.toUpperCase();
-                    if (upperGroup.includes('LIVE') || upperGroup.includes('AO VIVO') || upperGroup.includes('CANAIS')) {
-                        current = null;
-                        continue;
-                    }
-
-                    if (upperGroup.includes('SERIE') || upperGroup.includes('TEMPORADA')) {
-                        current.type = 'series';
-                        series.push(current);
-                    } else {
-                        current.type = 'movies';
-                        movies.push(current);
-                    }
-                    current = null;
-                }
-            }
-            catalogData.movies = movies;
-            catalogData.series = series;
-        }
-
-        function setupHero() {
-            renderPlatformFilters();
-            let pool = [...catalogData.movies, ...catalogData.series];
-            if (pool.length === 0) return;
-
-            const item = pool[Math.floor(Math.random() * Math.min(pool.length, 30))];
-            homeHeroSlides = [item];
-            setupHomeHero();
-        }
-
-        function switchTab(tab, preservePlatformFilter = false) {
-            if (!preservePlatformFilter) {
-                currentPlatformFilter = null;
-                renderPlatformFilters();
-            }
+        function switchTab(tab) {
             currentTab = tab;
+            VenusTopbar.setActive(tab);
+            currentCatalogCategory = catalogApiPages[tab]?.category || '';
+            renderPlatformFilters();
 
             ['home', 'movies', 'series', 'watchlist'].forEach(t => {
                 const btn = document.getElementById(`nav-${t}`);
@@ -1704,39 +1185,43 @@
         function renderPlatformFilters() {
             const container = document.getElementById('platformFilterList');
             if (!container) return;
-
+            const section = document.getElementById('platformBrowse');
+            const isCatalogTab = currentTab === 'movies' || currentTab === 'series';
+            section.classList.toggle('hidden', !isCatalogTab);
+            if (!isCatalogTab) {
+                container.replaceChildren();
+                return;
+            }
+            const categories = catalogCategories[currentTab === 'movies' ? 'filmes' : 'series'];
+            const options = [{ name: 'Todas', value: '' }, ...categories.map(name => ({ name, value: name }))];
             const fragment = document.createDocumentFragment();
-            platformFilters.forEach(platform => {
-                const selected = currentPlatformFilter === platform.id;
+            options.forEach(category => {
+                const selected = currentCatalogCategory === category.value;
                 const button = document.createElement('button');
                 button.type = 'button';
-                button.dataset.navId = `platform-${platform.id}`;
-                button.dataset.platformId = platform.id;
-                button.setAttribute('aria-label', platform.label);
+                button.dataset.navId = `category-${sanitizeId(category.value || 'all')}`;
                 button.setAttribute('aria-pressed', String(selected));
-                button.className = `tv-focusable platform-banner flex-none w-40 h-24 rounded-lg overflow-hidden bg-black ${selected ? 'platform-selected' : ''}`;
-                button.onclick = () => filterByPlatform(platform.id);
-                const image = document.createElement('img');
-                image.src = platform.image;
-                image.alt = platform.label;
-                image.loading = 'lazy';
-                image.decoding = 'async';
-                image.className = 'block w-full h-full object-cover';
-                button.appendChild(image);
+                button.className = `tv-focusable genre-chip flex-none ${selected ? 'is-selected' : ''}`;
+                button.textContent = category.name;
+                button.onclick = () => filterByCategory(category.value);
                 fragment.appendChild(button);
             });
             container.replaceChildren(fragment);
         }
 
-        function filterByPlatform(platformId) {
-            currentPlatformFilter = currentPlatformFilter === platformId ? null : platformId;
-            switchTab('home', true);
-            document.querySelectorAll('#platformFilterList [data-platform-id]').forEach(button => {
-                const selected = button.dataset.platformId === currentPlatformFilter;
-                button.setAttribute('aria-pressed', selected);
-                button.classList.toggle('platform-selected', selected);
-            });
-            scrollElementTo(document.getElementById('catalogPage'), document.getElementById('catalogContainer'));
+        async function filterByCategory(category) {
+            const type = currentTab;
+            currentCatalogCategory = category;
+            try {
+                const page = await VenusCatalog.list(type, 1, 30, category);
+                catalogData[type] = page.items;
+                catalogApiPages[type] = { page: page.page, hasNext: page.has_next, category };
+                renderPlatformFilters();
+                renderCurrentCatalog();
+                updateFocusables();
+            } catch (error) {
+                showApiConnectionError(error);
+            }
         }
 
         function renderCurrentCatalog() {
@@ -1747,10 +1232,7 @@
             renderedCategoryCount = 0;
 
             let itemsToRender = [];
-            if (currentPlatformFilter) {
-                const platform = platformFilters.find(entry => entry.id === currentPlatformFilter);
-                itemsToRender = [...catalogData.movies, ...catalogData.series].filter(item => platform?.match.test(item.group || ''));
-            } else if (currentTab === 'home') itemsToRender = [...catalogData.movies, ...catalogData.series];
+            if (currentTab === 'home') itemsToRender = [...catalogData.movies, ...catalogData.series];
             else if (currentTab === 'movies') itemsToRender = catalogData.movies;
             else if (currentTab === 'series') itemsToRender = catalogData.series;
             else if (currentTab === 'watchlist') {
@@ -1758,7 +1240,7 @@
                 itemsToRender = all.filter(i => watchlist.includes(i.id.toString()));
             }
 
-            if (homeDashboard && currentTab === 'home' && !currentPlatformFilter) {
+            if (homeDashboard && currentTab === 'home') {
                 currentGroupedCatalog = homeDashboard.collections.map(collection => [collection.title, collection.items, collection.id]);
                 appendNextCatalogGroups();
                 return;
@@ -1788,7 +1270,11 @@
             while (renderedCategoryCount < end) {
                 const [groupName, groupItems, collectionId] = currentGroupedCatalog[renderedCategoryCount++];
                 const row = createCatalogRow(groupName, groupItems, collectionId);
-                catalogRows.set(row.id, { items: groupItems, isTopTen: String(collectionId || '').startsWith('top10_') });
+                catalogRows.set(row.dataset.row, {
+                    items: groupItems,
+                    isTopTen: String(collectionId || '').startsWith('top10_'),
+                    type: currentTab === 'movies' || currentTab === 'series' ? currentTab : null
+                });
                 fragment.appendChild(row);
             }
 
@@ -1800,21 +1286,25 @@
         function createCatalogRow(groupName, groupItems, collectionId = '') {
             const rowId = `row-${sanitizeId(collectionId || groupName)}`;
             const isTopTen = String(collectionId).startsWith('top10_');
+            const isTopTenMovies = String(collectionId).startsWith('top10_filmes');
+            const isTopTenSeries = String(collectionId).startsWith('top10_series');
+            const displayGroupName = isTopTenMovies ? 'Filmes Top 10' : isTopTenSeries ? 'Séries Top 10' : groupName;
             const rowDiv = document.createElement('div');
-            rowDiv.className = 'space-y-2.5';
+            rowDiv.className = homeDashboard && currentTab === 'home' ? 'home-collection-row' : 'space-y-2.5';
             rowDiv.dataset.row = rowId;
             const heading = document.createElement('h2');
             heading.className = homeDashboard && currentTab === 'home' ? 'home-collection-title' : 'text-xs lg:text-sm font-bold text-white tracking-wide';
-            heading.textContent = homeDashboard && currentTab === 'home' ? groupName : `${groupName} (${groupItems.length})`;
+            heading.textContent = homeDashboard && currentTab === 'home' ? displayGroupName : `${displayGroupName} (${groupItems.length})`;
 
             const track = document.createElement('div');
             track.id = rowId;
             track.dataset.row = rowId;
-            track.className = `carousel-track ${homeDashboard && currentTab === 'home' ? 'home-collection-track' : 'space-x-3.5'} flex overflow-x-auto no-scrollbar`;
+            track.className = `carousel-track ${homeDashboard && currentTab === 'home' ? 'home-collection-track' : 'space-x-3.5'} flex overflow-x-auto overflow-y-hidden no-scrollbar`;
             const visibleCount = isTopTen ? 10 : MAX_CARDS_PER_ROW;
             const visibleItems = groupItems.slice(0, visibleCount);
             visibleItems.forEach((item, index) => track.appendChild(createCatalogCard(item, isTopTen ? index + 1 : null, rowId)));
-            if (groupItems.length > visibleCount) track.appendChild(createMoreItemsCard(rowId));
+            const hasApiNextPage = (currentTab === 'movies' || currentTab === 'series') && catalogApiPages[currentTab].hasNext;
+            if (groupItems.length > visibleCount || hasApiNextPage) track.appendChild(createMoreItemsCard(rowId));
 
             rowDiv.append(heading, track);
             return rowDiv;
@@ -1826,7 +1316,8 @@
                 navId: `card-${item.id}`,
                 rowId,
                 rank,
-                className: `home-poster-card ${homeDashboard && currentTab === 'home' ? '' : 'w-40'}`,
+                isTopTen: rank !== null,
+                className: rank ? '' : `home-poster-card ${homeDashboard && currentTab === 'home' ? '' : 'w-40'}`,
                 onClick: () => openDetailsModalById(item.id, item.type)
             });
         }
@@ -1843,19 +1334,38 @@
 
         function sanitizeId(str) { return str.replace(/[^a-zA-Z0-9]/g, '_'); }
 
-        function loadMoreRow(rowId) {
-            const container = document.getElementById(`row-${rowId}`);
+        async function loadMoreRow(rowId) {
+            const container = document.getElementById(rowId);
             const row = catalogRows.get(rowId);
             if (!container || !row) return;
-            const { items: allItems, isTopTen } = row;
-            container.querySelector(`[data-nav-id="more-${rowId}"]`)?.remove();
-            const currentCount = container.children.length;
+            const { items: allItems, isTopTen, type } = row;
+            const moreButton = container.querySelector(`[data-nav-id="more-${rowId}"]`);
+            if (moreButton) {
+                moreButton.dataset.loading = 'true';
+                moreButton.setAttribute('aria-label', 'Carregando mais títulos');
+            }
+            const currentCount = Array.from(container.children).filter(child => child !== moreButton).length;
+            moreButton?.remove();
+            if (currentCount >= allItems.length && type && catalogApiPages[type].hasNext) {
+                try {
+                    const category = catalogApiPages[type].category;
+                    const page = await VenusCatalog.list(type, catalogApiPages[type].page + 1, 30, category);
+                    catalogApiPages[type] = { page: page.page, hasNext: page.has_next, category };
+                    catalogData[type].push(...page.items);
+                    allItems.push(...page.items);
+                    writeCatalogCache().catch(() => {});
+                } catch (error) {
+                    container.appendChild(createMoreItemsCard(rowId));
+                    console.error('[Catalog] failed to load next page:', error);
+                    return;
+                }
+            }
             const nextBatch = allItems.slice(currentCount, currentCount + batchSize);
 
             const fragment = document.createDocumentFragment();
             nextBatch.forEach((item, index) => fragment.appendChild(createCatalogCard(item, isTopTen ? currentCount + index + 1 : null, rowId)));
 
-            if (currentCount + batchSize < allItems.length) {
+            if (currentCount + nextBatch.length < allItems.length || (type && catalogApiPages[type].hasNext)) {
                 fragment.appendChild(createMoreItemsCard(rowId));
             }
             container.appendChild(fragment);
@@ -1863,106 +1373,55 @@
             updateFocusables();
         }
 
-        // --- SEARCH MODAL ENGINE (2-COLUMN LAYOUT) ---
         function openSearchModal() {
-            currentSearchQuery = '';
-            searchMatches = [];
-            searchRenderCount = 0;
-            scheduleSearch.cancel();
-            document.getElementById('searchQueryDisplay').innerText = 'Digite o título...';
-            document.getElementById('searchModal').classList.remove('hidden');
-            renderSearchResults([]);
-            updateFocusables();
+            VenusSearch.open();
         }
 
         function closeSearchModal() {
-            document.getElementById('searchModal').classList.add('hidden');
-            updateFocusables();
-        }
-
-        function appendSearchChar(char) {
-            if (currentSearchQuery === '' || document.getElementById('searchQueryDisplay').innerText === 'Digite o título...') {
-                currentSearchQuery = char;
-            } else {
-                currentSearchQuery += char;
-            }
-            document.getElementById('searchQueryDisplay').innerText = currentSearchQuery;
-
-            scheduleSearch(currentSearchQuery);
-        }
-
-        function backspaceSearchChar() {
-            if (currentSearchQuery.length > 0) {
-                currentSearchQuery = currentSearchQuery.slice(0, -1);
-            }
-            document.getElementById('searchQueryDisplay').innerText = currentSearchQuery || 'Digite o título...';
-
-            scheduleSearch(currentSearchQuery);
-        }
-
-        function executeSearch(query) {
-            const normalizedQuery = normalizeSearchText(query.trim());
-            searchMatches = normalizedQuery
-                ? catalogSearchIndex.filter(entry => entry.normalizedName.includes(normalizedQuery)).map(entry => entry.item)
-                : [];
-            searchRenderCount = 0;
-            renderSearchResults(searchMatches);
-        }
-
-        function renderSearchResults(results, append = false) {
-            const container = document.getElementById('searchResultsContainer');
-            if (results.length === 0) {
-                container.innerHTML = `<div class="text-gray-500 text-xs col-span-full py-12 text-center">${currentSearchQuery ? 'Nenhum resultado correspondente.' : 'Digite algo no teclado para buscar filmes ou séries.'}</div>`;
-                return;
-            }
-
-            const fragment = document.createDocumentFragment();
-            if (!append) container.replaceChildren();
-            const start = searchRenderCount;
-            const end = Math.min(start + SEARCH_BATCH_SIZE, results.length);
-            for (let index = start; index < end; index++) {
-                const item = results[index];
-                const card = document.createElement('div');
-                card.dataset.navId = `search-res-${item.id}`;
-                card.className = 'tv-focusable card-item bg-[#141414] rounded-xl overflow-hidden cursor-pointer border border-gray-800';
-                card.onclick = () => {
-                    closeSearchModal();
-                    openDetailsModalById(item.id, item.type);
-                };
-                card.innerHTML = `<div class="h-40 w-full bg-[#181818] relative skeleton"><img data-src="${item.logo}" alt="${item.name}" loading="lazy" decoding="async" class="h-full w-full object-cover opacity-0"></div><div class="p-2 bg-[#141414]"><p class="text-[10px] font-medium text-gray-200 truncate">${item.name}</p></div>`;
-                fragment.appendChild(card);
-            }
-            searchRenderCount = end;
-            if (searchRenderCount < results.length) {
-                const moreButton = document.createElement('button');
-                moreButton.type = 'button';
-                moreButton.dataset.navId = 'search-more-results';
-                moreButton.className = 'tv-focusable col-span-full py-3 rounded-lg bg-gray-800 text-sm font-semibold text-white';
-                moreButton.textContent = `Mostrar mais (${results.length - searchRenderCount})`;
-                moreButton.onclick = () => renderSearchResults(searchMatches, true);
-                fragment.appendChild(moreButton);
-            }
-            container.appendChild(fragment);
-            observeLazyImages(container);
-            updateFocusables();
+            VenusSearch.close();
         }
 
         async function openDetailsModalById(id, type) {
             const all = [...catalogData.movies, ...catalogData.series];
             const item = all.find(i => i.id.toString() === id.toString() && (!type || i.type === type));
-            if (item) openDetailsModal(item);
+            if (item) {
+                void openDetailsModal(item);
+                return;
+            }
+            void openDetailsModal({ id: String(id), type: type || 'movies', name: 'Carregando título...' });
         }
 
         async function openDetailsModal(item) {
             currentSelectedItem = item;
-            applyDetailsMetadata(item);
             document.getElementById('detailsPage').scrollTop = 0;
             document.getElementById('catalogPage').classList.add('hidden');
             document.getElementById('detailsPage').classList.remove('hidden');
+            document.getElementById('detailsSkeleton').hidden = false;
+            document.getElementById('detailsContent').hidden = true;
 
             const playBtn = document.getElementById('modalPlayBtn');
             const episodesSec = document.getElementById('seriesEpisodesSection');
 
+            try {
+                const details = await getTitleDetails(item);
+                if (String(currentSelectedItem?.id) !== String(item.id)) return;
+                currentSelectedItem = {
+                    ...item,
+                    ...details,
+                    url_stream: details.url_stream || item.url_stream,
+                    url: details.url || item.url,
+                    detailLoaded: true
+                };
+                item = currentSelectedItem;
+            } catch (error) {
+                console.warn('[Details] public details unavailable:', error);
+                if (String(currentSelectedItem?.id) !== String(item.id)) return;
+            }
+
+            document.getElementById('detailsSkeleton').hidden = true;
+            document.getElementById('detailsContent').hidden = false;
+            applyDetailsMetadata(currentSelectedItem);
+            if (item.type === 'series') seriesInfoCache[item.id] = item;
             updateWatchlistButtonState(item.id);
 
             if (item.type === 'series') {
@@ -1985,6 +1444,7 @@
 
         function closeDetailsModal() {
             document.getElementById('detailsPage').classList.add('hidden');
+            document.getElementById('detailsSkeleton').hidden = true;
             document.getElementById('catalogPage').classList.remove('hidden');
             updateFocusables();
         }
@@ -1998,11 +1458,11 @@
             try {
                 let info = seriesInfoCache[seriesId];
                 if (!info) {
-                    info = await requestXtreamData('get_series_info', { series_id: seriesId });
+                    info = await VenusCatalog.details({ id: seriesId, type: 'series' });
                     seriesInfoCache[seriesId] = info;
                 }
 
-                const seriesInfo = info.info || info;
+                const seriesInfo = info.apiItem || info.info || info;
                 currentSelectedItem = {
                     ...currentSelectedItem,
                     titleLogo: seriesInfo.title_logo || seriesInfo.logo_title || seriesInfo.clear_logo || currentSelectedItem.titleLogo,
@@ -2017,6 +1477,23 @@
                     cast: seriesInfo.cast || currentSelectedItem.cast
                 };
                 applyDetailsMetadata(currentSelectedItem);
+
+                const publicEpisodes = info.apiItem?.episodios;
+                if (Array.isArray(publicEpisodes)) {
+                    info.episodes = publicEpisodes.reduce((seasons, episode) => {
+                        const season = String(episode.temporada || 1);
+                        if (!seasons[season]) seasons[season] = [];
+                        seasons[season].push({
+                            id: episode.id,
+                            episode_num: episode.episodio,
+                            title: episode.titulo,
+                            info: { duration: episode.duracao },
+                            container_extension: 'mp4',
+                            streamUrl: episode.url_stream
+                        });
+                        return seasons;
+                    }, {});
+                }
 
                 if (info && info.episodes) {
                     const seasons = Object.keys(info.episodes);
@@ -2057,7 +1534,7 @@
                 const epDiv = document.createElement('div');
                 epDiv.className = 'tv-focusable flex items-center justify-between bg-black/50 hover:bg-gray-800 p-2.5 rounded-xl transition cursor-pointer border border-gray-800/60';
                 epDiv.setAttribute('data-nav-id', `ep-${ep.id}`);
-                const epUrl = buildStreamUrl('series', ep.id, ep.container_extension || 'mp4');
+                const epUrl = ep.streamUrl || ep.url_stream || '';
 
                 epDiv.innerHTML = `
                     <div class="flex items-center space-x-2.5">
@@ -2098,8 +1575,7 @@
 
             if (currentHls) { currentHls.destroy(); currentHls = null; }
 
-            const kind = item.type === 'series' ? 'series' : 'movie';
-            const streamUrl = item.url || (item.id ? buildStreamUrl(kind, item.id, item.streamExtension || 'mp4') : '');
+            const streamUrl = item.url_stream || item.url || item.apiItem?.url_stream || '';
             if (!streamUrl) {
                 video.style.display = 'none';
                 errorDiv.style.display = 'block';
@@ -2166,19 +1642,6 @@
             if (currentSelectedItem) toggleWatchlist(currentSelectedItem.id);
         }
 
-        function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); updateFocusables(); }
-        function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); updateFocusables(); }
-        async function saveAndReload() {
-            const url = document.getElementById('xtreamUrlInput').value.trim();
-            if (window.AndroidBridge?.isAvailable?.() === true && url && !AndroidBridge.saveConnection(url)) {
-                showConnectionSetupError('URL inválida. Informe host, username e password da API Xtream.');
-                return;
-            }
-            if (url) await clearCatalogCache();
-            closeSettingsModal();
-            initApp();
-        }
-
         // --- TV REMOTE CONTROL NAVIGATION ENGINE (D-PAD) ---
         function updateFocusables() {
             VenusSpatialNav.refresh();
@@ -2203,7 +1666,6 @@
             if (!document.getElementById('searchModal').classList.contains('hidden')) closeSearchModal();
             else if (!document.getElementById('detailsPage').classList.contains('hidden')) closeDetailsModal();
             else if (!document.getElementById('playerModal').classList.contains('hidden')) closePlayer();
-            else if (!document.getElementById('settingsModal').classList.contains('hidden')) closeSettingsModal();
             else return false;
             return true;
         }

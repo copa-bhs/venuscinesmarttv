@@ -15,12 +15,54 @@
 
     function applyFocusStyle(element) {
         element.classList.add('focused');
-        element.style.setProperty('outline', '3px solid #ffffff', 'important');
-        element.style.setProperty('outline-offset', '3px', 'important');
+        element.style.setProperty('outline', 'none', 'important');
         element.style.setProperty('border-color', '#ffffff', 'important');
-        element.style.setProperty('box-shadow', '0 0 0 4px rgba(0,0,0,.88), 0 0 22px rgba(255,255,255,.8), 0 12px 32px rgba(0,0,0,.8)', 'important');
-        element.style.setProperty('transform', 'scale(1.08)', 'important');
-        element.style.setProperty('z-index', '110', 'important');
+        element.style.setProperty('box-shadow', '0 0 0 3px #ffffff, 0 8px 24px rgba(0,0,0,.8)', 'important');
+        element.style.setProperty('transform', 'scale(1.06)', 'important');
+        element.style.setProperty('z-index', '10', 'important');
+    }
+
+    function revealFocusedElement(element) {
+        let parent = element.parentElement;
+        let scrolled = false;
+        while (parent && parent !== document.body) {
+            const style = getComputedStyle(parent);
+            const canScrollX = parent.scrollWidth > parent.clientWidth && /auto|scroll/.test(style.overflowX);
+            const canScrollY = parent.scrollHeight > parent.clientHeight && /auto|scroll/.test(style.overflowY);
+            if (canScrollX) {
+                const parentRect = parent.getBoundingClientRect();
+                let elementRect = element.getBoundingClientRect();
+                const inset = Math.max(12, (parent.clientWidth - elementRect.width) / 2);
+                let nextLeft = parent.scrollLeft;
+                if (elementRect.left < parentRect.left + inset) nextLeft += elementRect.left - parentRect.left - inset;
+                else if (elementRect.right > parentRect.right - inset) nextLeft += elementRect.right - parentRect.right + inset;
+                if (Math.abs(nextLeft - parent.scrollLeft) > 1) {
+                    scroll(parent, nextLeft, parent.scrollTop);
+                    scrolled = true;
+                }
+            }
+            if (canScrollY) {
+                const parentRect = parent.getBoundingClientRect();
+                const elementRect = element.getBoundingClientRect();
+                let nextTop = parent.scrollTop;
+                if (elementRect.top < parentRect.top + 8) nextTop += elementRect.top - parentRect.top - 8;
+                else if (elementRect.bottom > parentRect.bottom - 8) nextTop += elementRect.bottom - parentRect.bottom + 8;
+                if (Math.abs(nextTop - parent.scrollTop) > 1) {
+                    scroll(parent, parent.scrollLeft, nextTop);
+                    scrolled = true;
+                }
+            }
+            parent = parent.parentElement;
+        }
+        if (!scrolled) element.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    }
+
+    function scroll(element, left, top) {
+        try { element.scrollTo({ left, top, behavior: 'smooth' }); }
+        catch {
+            element.scrollLeft = left;
+            element.scrollTop = top;
+        }
     }
 
     function getVisibleElements() {
@@ -56,7 +98,7 @@
         applyFocusStyle(focusedElement);
         try { focusedElement.focus({ preventScroll: true }); }
         catch { focusedElement.focus(); }
-        if (scroll) focusedElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+        if (scroll) revealFocusedElement(focusedElement);
         onFocus(focusedElement);
         return true;
     }

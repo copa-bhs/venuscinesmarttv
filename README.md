@@ -6,10 +6,9 @@ Aplicação estática em HTML, CSS e JavaScript puro, otimizada para navegação
 
 1. Na Vercel, escolha **Add New → Project** e importe `copa-bhs/venuscinesmarttv` do GitHub.
 2. Use **Other** como Framework Preset e `.` como Root Directory.
-3. Não configure Build Command, Install Command nem Output Directory. O `index.html` da raiz é servido diretamente e a função em `api/` é publicada como `/api/xtream`.
-4. Em **Settings → Environment Variables**, cadastre `XTREAM_BASE_URL`, `XTREAM_USERNAME` e `XTREAM_PASSWORD` para Production (e Preview, se necessário). Use os dados Xtream do provedor; o valor base deve ser apenas o host, por exemplo `https://provedor.example:8080`.
-5. Faça um novo deploy. Os próximos pushes para `main` gerarão novos deploys automaticamente.
+3. Não configure Build Command, Install Command, Output Directory nem variáveis de ambiente. O `index.html` da raiz é servido como frontend estático.
+4. Faça o deploy. Os próximos pushes para `main` gerarão novos deploys automaticamente.
 
-O endpoint serverless `/api/xtream` usa essas variáveis para consultar catálogo, detalhes e streams. Assim, a conexão é configurada uma única vez na Vercel e nenhuma TV precisa inserir a URL. Não coloque usuário ou senha no código, em variáveis `VITE_*`/`NEXT_PUBLIC_*` ou em commits públicos.
+O frontend consulta somente `https://cine.venusdev.xyz`: `/home` fornece os destaques, `/filmes` e `/series` as listas em páginas de 30 títulos, `/buscar` as pesquisas paginadas, `/categorias` os filtros e `/info/filme/{id}` e `/info/serie/{id}` os detalhes e episódios. A reprodução usa o campo `url_stream` retornado pela API sem montar URLs de provedor no cliente. Como a página é HTTPS, a API deve retornar URLs de stream HTTPS para evitar bloqueio de conteúdo misto pelo navegador.
 
-No Android TV, a SPA consulta o bridge nativo, mostra até oito categorias por lote e usa IndexedDB como cache local por 15 minutos. O cache guarda metadados do catálogo, não URLs de stream com credenciais. A splash inicial exibe o V esmeralda até haver cache ou resposta de rede.
+Os metadados do catálogo são mantidos em IndexedDB por 15 minutos; o cache não guarda URLs de stream. A splash inicial exibe o V esmeralda até haver cache ou resposta de rede.
