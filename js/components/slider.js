@@ -32,6 +32,24 @@ window.VenusSlider = (function () {
     let callbacks = {};
     const rotationDelay = 8000;
 
+    function createAgeRatingBadge(value) {
+        const rawValue = Array.isArray(value) ? value.find(Boolean) : value;
+        const rawLabel = String(rawValue ?? '').trim();
+        if (!rawLabel) return null;
+
+        const normalized = rawLabel.toUpperCase();
+        const ageMatch = normalized.match(/(?:^|\D)(10|12|14|16|18)(?:\D|$)/);
+        const category = /^(L(?:IVRE)?|0{1,2})(?:$|\s|[+/-])/.test(normalized)
+            ? 'L'
+            : ageMatch?.[1] || '';
+        const label = category === 'L' ? 'L' : category || rawLabel;
+        const badge = document.createElement('span');
+        badge.className = `badge-classificacao${category ? ` badge-${category}` : ''}`;
+        badge.textContent = label;
+        badge.setAttribute('aria-label', `Classificação indicativa ${label}`);
+        return badge;
+    }
+
     function setSlide(index) {
         if (!slides.length) return;
         activeIndex = (index + slides.length) % slides.length;
@@ -80,12 +98,28 @@ window.VenusSlider = (function () {
             logo.removeAttribute('src');
         }
         title.textContent = item.name || '';
-        document.getElementById('heroMeta').textContent = [
-            item.maturityRating,
-            item.rating ? `★ ${item.rating}` : '',
-            item.year,
-            item.genre
-        ].filter(Boolean).join(' · ');
+        const heroMeta = document.getElementById('heroMeta');
+        const metaParts = [
+            createAgeRatingBadge(item.maturityRating),
+            ...[item.rating ? `★ ${item.rating}` : '', item.year, item.genre]
+                .filter(Boolean)
+                .map(value => {
+                    const part = document.createElement('span');
+                    part.textContent = value;
+                    return part;
+                })
+        ].filter(Boolean);
+        heroMeta.replaceChildren();
+        metaParts.forEach((part, index) => {
+            if (index > 0) {
+                const separator = document.createElement('span');
+                separator.className = 'hero-meta-separator';
+                separator.setAttribute('aria-hidden', 'true');
+                separator.textContent = '·';
+                heroMeta.appendChild(separator);
+            }
+            heroMeta.appendChild(part);
+        });
         document.getElementById('heroDesc').textContent = item.plot || '';
         document.querySelectorAll('#heroDots button').forEach((dot, dotIndex) => {
             const selected = dotIndex === activeIndex;
@@ -132,5 +166,5 @@ window.VenusSlider = (function () {
         timerId = duration > 0 ? setTimeout(scheduleNext, duration) : 0;
     }
 
-    return { init, pause };
+    return { init, pause, createAgeRatingBadge };
 })();

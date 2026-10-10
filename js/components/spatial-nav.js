@@ -4,6 +4,7 @@
     let moveQueue = [];
     let framePending = false;
     let scrollFrame = 0;
+    let lastNavbarElement = null;
     let onBack = () => false;
     let onInteraction = () => {};
     let onFocus = () => {};
@@ -16,7 +17,7 @@
 
     function applyFocusStyle(element) {
         element.classList.add('focused');
-        element.style.setProperty('outline', '3px solid #ffffff', 'important');
+        element.style.setProperty('outline', '4px solid #ffffff', 'important');
         element.style.setProperty('outline-offset', '2px', 'important');
         element.style.setProperty('border-color', '#ffffff', 'important');
         element.style.setProperty('box-shadow', 'none', 'important');
@@ -64,6 +65,7 @@
         document.querySelectorAll('.focused').forEach(clearFocusStyle);
         if (focusedElement && !document.querySelector('.focused')) clearFocusStyle(focusedElement);
         focusedElement = element;
+        if (element.closest('#navbar')) lastNavbarElement = element;
         applyFocusStyle(focusedElement);
         try { focusedElement.focus({ preventScroll: true }); }
         catch { focusedElement.focus(); }
@@ -97,13 +99,40 @@
         }, null)?.element || null;
     }
 
+    function moveBetweenSections(current, direction, elements) {
+        const navbar = document.getElementById('navbar');
+        const hero = document.getElementById('heroSection');
+        if (!navbar || !hero) return false;
+
+        if (direction === 'down' && navbar.contains(current)) {
+            setFocus(hero, true, elements);
+            return true;
+        }
+
+        if (direction === 'up' && current === hero) {
+            const target = lastNavbarElement && elements.includes(lastNavbarElement)
+                ? lastNavbarElement
+                : elements.find(element => element.dataset.navId === 'tab-home') ||
+                    elements.find(element => element.closest('#navbar'));
+            if (target) setFocus(target, true, elements);
+            return true;
+        }
+
+        if (direction === 'up' && hero.contains(current) && current !== hero) {
+            setFocus(hero, true, elements);
+            return true;
+        }
+
+        return false;
+    }
+
     function moveWithinHero(current, direction, elements) {
         const hero = document.getElementById('heroSection');
         if (!hero || !hero.contains(current)) return false;
         const actions = [
-            document.getElementById('heroPlayBtn'),
-            document.getElementById('heroInfoBtn')
-        ].filter(element => elements.includes(element));
+            elements.find(element => element.dataset.navId === 'hero-play'),
+            elements.find(element => element.dataset.navId === 'hero-info')
+        ].filter(Boolean);
         if (current === hero) {
             const target = direction === 'right' ? actions[0] : actions[actions.length - 1];
             if (target) setFocus(target, true, elements);
@@ -112,9 +141,9 @@
         const actionIndex = actions.indexOf(current);
         if (actionIndex >= 0) {
             if (direction === 'up') setFocus(hero, true, elements);
-            else if (direction === 'left' || direction === 'right') {
-                const nextIndex = actionIndex + (direction === 'right' ? 1 : -1);
-                if (actions[nextIndex]) setFocus(actions[nextIndex], true, elements);
+            else if (direction === 'left') setFocus(hero, true, elements);
+            else if (direction === 'right') {
+                setFocus(actions[actionIndex + 1] || hero, true, elements);
             }
             return true;
         }
@@ -158,6 +187,7 @@
             return;
         }
 
+        if (moveBetweenSections(current, direction, elements)) return;
         if ((direction === 'left' || direction === 'right') && moveWithinHero(current, direction, elements)) return;
         if ((direction === 'up' || direction === 'down') && moveBetweenRows(current, direction, elements)) return;
 
