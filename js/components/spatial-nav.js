@@ -5,6 +5,9 @@
     let framePending = false;
     let scrollFrame = 0;
     let lastNavbarElement = null;
+    let focusablesDirty = true;
+    let visibleElementsCache = [];
+    let catalogRowsCache = [];
     let onBack = () => false;
     let onInteraction = () => {};
     let onFocus = () => {};
@@ -35,38 +38,57 @@
         });
     }
 
-    function getVisibleElements() {
-        return Array.from(document.querySelectorAll(selector)).filter(element => {
-            if (element.matches(':disabled') || element.closest('[hidden], .hidden, [aria-hidden="true"]')) return false;
-            const style = getComputedStyle(element);
-            const rect = element.getBoundingClientRect();
-            return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
-        });
+    function containsFocusable(node) {
+        return node.nodeType === 1 && (node.matches(selector) || node.querySelector(selector));
     }
 
-    function refresh() {
-        const elements = getVisibleElements();
-        elements.forEach(element => {
+    function getVisibleElements(force = false) {
+        if (!force && !focusablesDirty) return visibleElementsCache;
+
+        const rows = new Map();
+        visibleElementsCache = Array.from(document.querySelectorAll(selector)).filter(element => {
+            if (element.matches(':disabled') || element.closest('[hidden], .hidden, [aria-hidden="true"]')) return false;
+            const style = getComputedStyle(element);
+            if (style.display === 'none' || style.visibility === 'hidden' || element.getClientRects().length === 0) return false;
             if (!element.hasAttribute('tabindex')) element.setAttribute('tabindex', '0');
+            const rowId = element.dataset.row;
+            if (rowId && rowId !== 'hero' && element.closest('#catalogContainer')) {
+                if (!rows.has(rowId)) rows.set(rowId, []);
+                rows.get(rowId).push(element);
+            }
+            return true;
         });
+        catalogRowsCache = Array.from(rows.values());
+        focusablesDirty = false;
+
+        const elements = visibleElementsCache;
         const active = elements.includes(document.activeElement) ? document.activeElement : null;
-        const selected = active || elements.find(element => element.classList.contains('focused')) || null;
-        document.querySelectorAll('.focused').forEach(element => {
-            if (element !== selected) clearFocusStyle(element);
+        const selected = active || (elements.includes(focusedElement) ? focusedElement : null) ||
+            elements.find(element => element.classList.contains('focused')) || null;
+        elements.forEach(element => {
+            if (element !== selected && element.classList.contains('focused')) clearFocusStyle(element);
         });
         focusedElement = selected;
-        if (focusedElement) applyFocusStyle(focusedElement);
+        if (focusedElement && !focusedElement.classList.contains('focused')) applyFocusStyle(focusedElement);
         return elements;
     }
 
-    // Sincroniza o foco visual e o foco nativo do WebView.
+    function refresh() {
+        focusablesDirty = true;
+        return getVisibleElements(true);
+    }
+
     function setFocus(element, scroll = true, visibleElements = null) {
-        if (!element || !(visibleElements || getVisibleElements()).includes(element)) return false;
-        document.querySelectorAll('.focused').forEach(clearFocusStyle);
-        if (focusedElement && !document.querySelector('.focused')) clearFocusStyle(focusedElement);
+        let elements = visibleElements || getVisibleElements();
+        if (!element || !elements.includes(element)) {
+            elements = getVisibleElements(true);
+            if (!element || !elements.includes(element)) return false;
+        }
+        // Sincroniza o foco visual e o foco nativo do WebView sem reler toda a lista.
+        if (focusedElement && focusedElement !== element) clearFocusStyle(focusedElement);
         focusedElement = element;
         if (element.closest('#navbar')) lastNavbarElement = element;
-        applyFocusStyle(focusedElement);
+        if (!focusedElement.classList.contains('focused')) applyFocusStyle(focusedElement);
         try { focusedElement.focus({ preventScroll: true }); }
         catch { focusedElement.focus(); }
         if (scroll) revealFocusedElement(focusedElement);
@@ -79,6 +101,21 @@
     }
 
     function getCatalogRows(elements) {
+        return elements === visibleElementsCache ? catalogRowsCache : buildCatalogRows(elements);
+    }
+
+    function getSpatialCandidates(current, direction, elements) {
+        if (direction !== 'left' && direction !== 'right') return elements;
+        const navbar = current.closest('#navbar');
+        if (navbar) return elements.filter(element => navbar.contains(element));
+        if (current.closest('#catalogContainer') && current.dataset.row) {
+            const row = getCatalogRows(elements).find(items => items.includes(current));
+            if (row) return row;
+        }
+        return elements;
+    }
+
+    function buildCatalogRows(elements) {
         const rows = new Map();
         elements.forEach(element => {
             const rowId = element.dataset.row;
@@ -176,7 +213,7 @@
 
     // Escolhe o vizinho visível mais próximo na direção solicitada.
     function move(direction) {
-        const elements = refresh();
+        const elements = getVisibleElements();
         if (!elements.length) return;
         const current = elements.includes(document.activeElement)
             ? document.activeElement
@@ -193,9 +230,10 @@
         const currentRect = current.getBoundingClientRect();
         const currentCenterX = currentRect.left + currentRect.width / 2;
         const currentCenterY = currentRect.top + currentRect.height / 2;
+        const candidates = getSpatialCandidates(current, direction, elements);
         let best = null;
 
-        elements.forEach(candidate => {
+        candidates.forEach(candidate => {
             if (candidate === current) return;
             const rect = candidate.getBoundingClientRect();
             const centerX = rect.left + rect.width / 2;
@@ -284,7 +322,12 @@
             const element = event.target.closest(selector);
             if (element && element !== focusedElement && getVisibleElements().includes(element)) setFocus(element, false);
         });
-        const observer = new MutationObserver(refresh);
+        const observer = new MutationObserver(records => {
+            if (records.some(record =>
+                Array.from(record.addedNodes).some(containsFocusable) ||
+                Array.from(record.removedNodes).some(containsFocusable)
+            )) focusablesDirty = true;
+        });
         observer.observe(document.body, { childList: true, subtree: true });
     }
 
