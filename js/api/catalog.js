@@ -11,15 +11,26 @@
         return response.json();
     }
 
+    function optimizeImage(url, type) {
+        if (!url || typeof url !== 'string') return '';
+        if (type === 'card') {
+            return url.replace('/w600_and_h900_bestv2/', '/w342/').replace('/w500/', '/w342/');
+        }
+        if (type === 'hero') {
+            return url.replace('/w1280/', '/w780/').replace('/original/', '/w1280/');
+        }
+        return url;
+    }
+
     function mapItem(item) {
         const type = item.tipo === 'serie' || item.type === 'series' ? 'series' : 'movies';
         return {
             id: String(item.id ?? ''),
             type,
             name: item.titulo || item.name || 'Título indisponível',
-            logo: item.capa || item.logo || item.stream_icon || '',
+            logo: optimizeImage(item.capa || item.stream_icon || '', 'card') || item.logo || '',
             titleLogo: item.logo || item.titleLogo || '',
-            backdrop: item.banner || item.backdrop || '',
+            backdrop: optimizeImage(item.banner || item.backdrop || '', 'hero'),
             maturityRating: item.classificacao || item.maturityRating || '',
             rating: item.score ?? item.rating ?? '',
             year: String(item.ano || item.year || '').slice(0, 4),
@@ -63,6 +74,7 @@
 
     window.VenusCatalog = {
         mapItem,
+        optimizeImage,
         list,
         search,
         details,

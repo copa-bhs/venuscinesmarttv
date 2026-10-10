@@ -90,8 +90,8 @@
     }
 
     // Sincroniza o foco visual e o foco nativo do WebView.
-    function setFocus(element, scroll = true) {
-        if (!element || !getVisibleElements().includes(element)) return false;
+    function setFocus(element, scroll = true, visibleElements = null) {
+        if (!element || !(visibleElements || getVisibleElements()).includes(element)) return false;
         document.querySelectorAll('.focused').forEach(clearFocusStyle);
         if (focusedElement && !document.querySelector('.focused')) clearFocusStyle(focusedElement);
         focusedElement = element;
@@ -152,9 +152,7 @@
             if (!best || score < best.score) best = { element: candidate, score };
         });
 
-        if (best && setFocus(best.element)) {
-            console.log(`[SpatialNav] moved ${direction} from ${current.dataset.navId || current.id || current.tagName} to ${best.element.dataset.navId || best.element.id || best.element.tagName}`);
-        }
+        if (best) setFocus(best.element, true, elements);
     }
 
     function handleKeydown(event) {
@@ -209,11 +207,11 @@
         document.addEventListener('keydown', handleKeydown, true);
         document.addEventListener('focusin', event => {
             const element = event.target.closest(selector);
-            if (element && getVisibleElements().includes(element)) setFocus(element, false);
+            if (element && element !== focusedElement && getVisibleElements().includes(element)) setFocus(element, false);
         });
         document.addEventListener('mouseover', event => {
             const element = event.target.closest(selector);
-            if (element && getVisibleElements().includes(element)) setFocus(element, false);
+            if (element && element !== focusedElement && getVisibleElements().includes(element)) setFocus(element, false);
         });
         const observer = new MutationObserver(refresh);
         observer.observe(document.body, { childList: true, subtree: true });

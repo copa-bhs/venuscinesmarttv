@@ -16,5 +16,22 @@
         });
     }
 
-    window.VenusTopbar = { setActive };
+    function setVisible(visible) {
+        const topbar = document.getElementById('navbar');
+        if (!topbar) return;
+        topbar.classList.toggle('topbar-hidden', !visible);
+        topbar.setAttribute('aria-hidden', String(!visible));
+        topbar.inert = !visible;
+    }
+
+    function syncVisibility() {
+        const overlays = ['searchModal', 'detailsPage', 'playerModal'];
+        const overlayOpen = overlays.some(id => {
+            const element = document.getElementById(id);
+            return element && !element.classList.contains('hidden');
+        });
+        setVisible(!overlayOpen);
+    }
+
+    window.VenusTopbar = { setActive, setVisible, syncVisibility };
 })();

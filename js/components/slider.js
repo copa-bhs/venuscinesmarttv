@@ -39,16 +39,47 @@ window.VenusSlider = (function () {
         const images = [document.getElementById('heroImageA'), document.getElementById('heroImageB')];
         const activeImage = images[activeIndex % images.length];
         const inactiveImage = images[(activeIndex + 1) % images.length];
-        activeImage.src = item.backdrop || item.logo || '';
+        const nextIndex = (activeIndex + 1) % slides.length;
+        const setBackdrop = (image, slide, eager) => {
+            const source = slide.backdrop || slide.logo || '';
+            image.loading = eager ? 'eager' : 'lazy';
+            image.decoding = 'async';
+            if (image.src !== source) image.src = source;
+        };
+        setBackdrop(activeImage, item, activeIndex < 2);
         activeImage.alt = item.name || '';
         activeImage.classList.add('is-visible');
         inactiveImage.classList.remove('is-visible');
+        if (slides.length > 1) setBackdrop(inactiveImage, slides[nextIndex], nextIndex < 2);
 
         const logoWrap = document.getElementById('heroLogoWrap');
         const logo = document.getElementById('heroLogo');
-        logoWrap.hidden = !item.titleLogo;
-        if (item.titleLogo) logo.src = item.titleLogo;
-        document.getElementById('heroTitle').textContent = item.name || '';
+        const title = document.getElementById('heroTitle');
+        logo.onload = () => {
+            logo.classList.add('is-loaded');
+            title.hidden = true;
+        };
+        logo.onerror = () => {
+            logo.classList.remove('is-loaded');
+            logoWrap.hidden = true;
+            title.hidden = false;
+        };
+        if (item.titleLogo) {
+            logoWrap.hidden = false;
+            logo.classList.remove('is-loaded');
+            title.hidden = false;
+            if (logo.src !== item.titleLogo) logo.src = item.titleLogo;
+            if (logo.complete && logo.naturalWidth > 0) {
+                logo.classList.add('is-loaded');
+                title.hidden = true;
+            }
+        } else {
+            logoWrap.hidden = true;
+            logo.classList.remove('is-loaded');
+            title.hidden = false;
+            logo.removeAttribute('src');
+        }
+        title.textContent = item.name || '';
         document.getElementById('heroMeta').textContent = [
             item.maturityRating,
             item.rating ? `★ ${item.rating}` : '',

@@ -303,6 +303,7 @@
         renderShell();
         updateQueryDisplay();
         modal.classList.remove('hidden');
+        window.VenusTopbar?.setVisible(false);
         void loadShortcuts();
         void showRecommendations();
         window.VenusSpatialNav?.refresh();
@@ -314,6 +315,7 @@
         clearTimeout(state.debounceTimer);
         state.requestId++;
         document.getElementById('searchModal')?.classList.add('hidden');
+        window.VenusTopbar?.syncVisibility();
         window.VenusSpatialNav?.refresh();
         if (state.returnFocus?.isConnected) window.VenusSpatialNav?.focus(state.returnFocus, false);
         state.returnFocus = null;
