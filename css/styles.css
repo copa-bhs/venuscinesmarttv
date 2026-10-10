@@ -304,6 +304,89 @@ body { overflow: hidden; }
 .catalog-skeleton-card { flex: 0 0 140px; width: 140px; height: 210px; border-radius: 8px; background-color: #1a1a1a; }
 .collection-load-sentinel { min-height: 250px; contain: layout style paint; }
 
+.episodios-section { margin-top: 24px; padding: 28px 0 40px; border-top: 1px solid rgba(255,255,255,.09); }
+.episodios-titulo { margin: 0 0 18px; color: #fff; font-size: 24px; font-weight: 800; }
+.temporadas-seletor { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.temporada-circle {
+    display: inline-flex;
+    width: 52px;
+    height: 52px;
+    flex: 0 0 52px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 2px solid rgba(255,255,255,.2);
+    border-radius: 50%;
+    color: #fff;
+    background: rgba(255,255,255,.08);
+    font-size: 17px;
+    font-weight: 800;
+    transition: transform 180ms ease, opacity 180ms ease;
+}
+.temporada-circle.active { border-color: #fff; color: #000; background: #fff; }
+.temporada-circle.focused { z-index: 2; transform: scale(1.1); outline: 2px solid rgba(255,255,255,.48); outline-offset: 3px; }
+.temporada-circle--wide { font-size: 13px; }
+.episodios-scroll {
+    display: flex;
+    gap: 16px;
+    min-height: 0;
+    padding: 8px 6px 18px;
+    margin: 0 -6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+}
+.episodios-scroll::-webkit-scrollbar { display: none; }
+.episodio-card {
+    display: flex;
+    flex: 0 0 280px;
+    width: 280px;
+    flex-direction: column;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    border-radius: 8px;
+    color: #fff;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    transform: translateZ(0);
+    transition: transform 180ms ease, opacity 180ms ease;
+    contain: layout style;
+    scroll-snap-align: start;
+}
+.episodio-card.focused { z-index: 2; transform: scale(1.05) translateZ(0); }
+.episodio-thumb {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #1a1a1a;
+}
+.episodio-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.episodio-thumb__fallback { position: absolute; inset: 0; display: grid; place-items: center; color: #777; font-size: 28px; }
+.episodio-play-overlay { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,.35); opacity: 0; pointer-events: none; transition: opacity 160ms ease; }
+.episodio-card.focused .episodio-play-overlay { opacity: 1; }
+.episodio-play-overlay span { display: grid; width: 52px; height: 52px; place-items: center; padding-left: 3px; border-radius: 50%; color: #000; background: rgba(255,255,255,.96); font-size: 20px; }
+.episodio-card.focused .episodio-thumb { outline: 3px solid #fff; outline-offset: 2px; }
+.episodio-info { display: flex; flex-direction: column; gap: 3px; padding: 10px 3px 0; }
+.episodio-numero { color: #fff; font-size: 15px; font-weight: 750; }
+.episodio-duracao { color: #8d8d8d; font-size: 12px; font-weight: 500; }
+.episodios-vazio { min-width: 100%; padding: 26px 0; color: #aaa; font-size: 14px; }
+@media (max-width: 1280px) { .episodio-card { flex-basis: 240px; width: 240px; } }
+@media (min-width: 1920px) { .episodio-card { flex-basis: 320px; width: 320px; } }
+@media (max-width: 760px) {
+    .episodios-section { padding: 22px 0 30px; }
+    .episodios-titulo { font-size: 20px; }
+    .temporada-circle { width: 46px; height: 46px; flex-basis: 46px; }
+    .episodio-card { flex-basis: 240px; width: 240px; }
+}
+
 #platformBrowse { padding-inline: 32px; }
 .genre-chip { min-height: 38px; padding: 8px 15px; border: 1px solid rgba(255,255,255,.15); border-radius: 5px; color: #d0d0d0; background: rgba(255,255,255,.05); font-size: 12px; font-weight: 650; }
 .genre-chip:hover, .genre-chip.focused, .genre-chip.is-selected { border-color: rgba(255,255,255,.85); color: #fff; background: rgba(255,255,255,.12); }

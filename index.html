@@ -462,16 +462,6 @@
             color: rgba(255,255,255,0.9);
             line-height: 1.6;
         }
-        #seriesEpisodesSection {
-            margin-top: 0.4rem;
-            border-top: 1px solid rgba(255,255,255,0.08);
-            padding-top: 0.9rem;
-        }
-        #seasonSelectorContainer button {
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.08);
-            color: rgba(255,255,255,0.82);
-        }
         @media (max-width: 900px) {
             .netflix-details-cover {
                 min-height: 58vh;
@@ -676,13 +666,11 @@
                     </div>
                 </div>
 
-                <div id="seriesEpisodesSection" class="hidden">
-                    <div class="flex items-center justify-between gap-3">
-                        <h3 class="text-xs font-bold text-white uppercase tracking-wider">Temporadas e Episódios</h3>
-                        <div id="seasonSelectorContainer" class="flex space-x-2 overflow-x-auto no-scrollbar py-1"></div>
-                    </div>
-                    <div id="episodesListContainer" class="space-y-1.5 max-h-40 overflow-y-auto no-scrollbar pr-1 mt-2"></div>
-                </div>
+                <section id="seriesEpisodesSection" class="hidden episodios-section" aria-labelledby="episodesHeading">
+                    <h3 id="episodesHeading" class="episodios-titulo">Episódios</h3>
+                    <div id="seasonSelectorContainer" class="temporadas-seletor" aria-label="Temporadas"></div>
+                    <div id="episodesListContainer" class="episodios-scroll" aria-label="Episódios da temporada selecionada"></div>
+                </section>
 
                 <section id="commentsSection" class="details-comments" aria-label="Comentários">
                     <h3>Comentários</h3>
@@ -1542,8 +1530,11 @@
                         if (!seasons[season]) seasons[season] = [];
                         seasons[season].push({
                             id: episode.id,
+                            season_num: episode.temporada,
                             episode_num: episode.episodio,
                             title: episode.titulo,
+                            capa: episode.capa,
+                            url_stream: episode.url_stream,
                             info: { duration: episode.duracao },
                             container_extension: 'mp4',
                             streamUrl: episode.url_stream
@@ -1553,21 +1544,29 @@
                 }
 
                 if (info && info.episodes) {
-                    const seasons = Object.keys(info.episodes);
+                    const seasons = Object.keys(info.episodes).sort((a, b) => Number(a) - Number(b));
                     if (seasons.length === 0) {
                         seasonContainer.innerHTML = `<span class="text-xs text-gray-400">Nenhum episódio.</span>`;
                         return;
                     }
 
-                    seasonContainer.innerHTML = '';
+                    seasonContainer.replaceChildren();
                     seasons.forEach((seasonNum, idx) => {
                         const btn = document.createElement('button');
-                        btn.className = `tv-focusable px-3.5 py-1 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${idx === 0 ? 'bg-venus-red text-white' : 'bg-gray-800 text-gray-300'}`;
-                        btn.setAttribute('data-nav-id', `season-${seasonNum}`);
-                        btn.innerText = `Temp ${seasonNum}`;
+                        btn.type = 'button';
+                        btn.className = `tv-focusable temporada-circle ${idx === 0 ? 'active' : ''} ${seasonNum.length > 2 ? 'temporada-circle--wide' : ''}`;
+                        btn.dataset.navId = `season-${seasonNum}`;
+                        btn.dataset.row = 'episode-seasons';
+                        btn.dataset.temporada = seasonNum;
+                        btn.setAttribute('aria-label', `Temporada ${seasonNum}`);
+                        btn.setAttribute('aria-pressed', String(idx === 0));
+                        btn.textContent = seasonNum;
                         btn.onclick = () => {
-                            seasonContainer.querySelectorAll('button').forEach(b => b.className = 'tv-focusable px-3.5 py-1 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer bg-gray-800 text-gray-300');
-                            btn.className = 'tv-focusable px-3.5 py-1 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer bg-venus-red text-white';
+                            seasonContainer.querySelectorAll('.temporada-circle').forEach(button => {
+                                const active = button === btn;
+                                button.classList.toggle('active', active);
+                                button.setAttribute('aria-pressed', String(active));
+                            });
                             renderEpisodesList(info.episodes[seasonNum]);
                         };
                         seasonContainer.appendChild(btn);
@@ -1585,36 +1584,78 @@
 
         function renderEpisodesList(episodes) {
             const container = document.getElementById('episodesListContainer');
-            container.innerHTML = '';
+            container.replaceChildren();
+            if (!episodes?.length) {
+                const empty = document.createElement('p');
+                empty.className = 'episodios-vazio';
+                empty.textContent = 'Nenhum episódio encontrado para esta temporada.';
+                container.appendChild(empty);
+                updateFocusables();
+                return;
+            }
 
-            episodes.forEach(ep => {
-                const epDiv = document.createElement('div');
-                epDiv.className = 'tv-focusable flex items-center justify-between bg-black/50 hover:bg-gray-800 p-2.5 rounded-xl transition cursor-pointer border border-gray-800/60';
-                epDiv.setAttribute('data-nav-id', `ep-${ep.id}`);
-                const epUrl = ep.streamUrl || ep.url_stream || '';
+            episodes.forEach((ep, index) => {
+                const episodeUrl = ep.streamUrl || ep.url_stream || '';
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = 'tv-focusable episodio-card';
+                card.dataset.navId = `episode-${ep.id}`;
+                card.dataset.row = 'episode-cards';
+                card.dataset.id = ep.id;
+                card.dataset.url = episodeUrl;
+                card.setAttribute('aria-label', `Episódio ${ep.episode_num || index + 1}${ep.title ? `: ${ep.title}` : ''}${ep.info?.duration ? `, duração ${ep.info.duration}` : ''}`);
 
-                epDiv.innerHTML = `
-                    <div class="flex items-center space-x-2.5">
-                        <div class="bg-venus-red/20 text-venus-red w-6 h-6 rounded-full flex items-center justify-center font-bold text-[11px]">
-                            ${ep.episode_num || '#'}
-                        </div>
-                        <div>
-                            <p class="text-xs font-bold text-white">${ep.title || `Episódio ${ep.episode_num}`}</p>
-                            <p class="text-[9px] text-gray-400">Duração: ${ep.info?.duration || '45m'}</p>
-                        </div>
-                    </div>
-                    <button class="bg-venus-red text-white px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center space-x-1">
-                        <i class="fa-solid fa-play text-[8px]"></i>
-                        <span>Assistir</span>
-                    </button>
-                `;
+                const thumbnail = document.createElement('span');
+                thumbnail.className = 'episodio-thumb';
+                const fallback = document.createElement('span');
+                fallback.className = 'episodio-thumb__fallback';
+                fallback.setAttribute('aria-hidden', 'true');
+                fallback.innerHTML = '<i class="fa-solid fa-film"></i>';
+                thumbnail.appendChild(fallback);
 
-                epDiv.onclick = () => {
+                if (ep.capa) {
+                    const image = document.createElement('img');
+                    image.src = ep.capa;
+                    image.alt = '';
+                    image.loading = 'lazy';
+                    image.decoding = 'async';
+                    image.addEventListener('load', () => { fallback.hidden = true; }, { once: true });
+                    image.addEventListener('error', () => { image.hidden = true; }, { once: true });
+                    thumbnail.appendChild(image);
+                }
+
+                const overlay = document.createElement('span');
+                overlay.className = 'episodio-play-overlay';
+                overlay.setAttribute('aria-hidden', 'true');
+                overlay.innerHTML = '<span>▶</span>';
+                thumbnail.appendChild(overlay);
+
+                const information = document.createElement('span');
+                information.className = 'episodio-info';
+                const episodeNumber = document.createElement('span');
+                episodeNumber.className = 'episodio-numero';
+                episodeNumber.textContent = `Episódio ${ep.episode_num || index + 1}`;
+                information.appendChild(episodeNumber);
+                const duration = ep.info?.duration;
+                if (duration) {
+                    const durationLabel = document.createElement('span');
+                    durationLabel.className = 'episodio-duracao';
+                    durationLabel.textContent = duration;
+                    information.appendChild(durationLabel);
+                }
+
+                card.append(thumbnail, information);
+                card.addEventListener('focus', () => card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }));
+                card.onclick = () => {
                     closeDetailsModal();
-                    playItem({ name: `${currentSelectedItem.name} - Ep ${ep.episode_num}`, url: epUrl, streamExtension: ep.container_extension || 'mp4' });
+                    playItem({
+                        name: `${currentSelectedItem.name} - Ep ${ep.episode_num || index + 1}`,
+                        url_stream: episodeUrl,
+                        url: episodeUrl,
+                        streamExtension: ep.container_extension || 'mp4'
+                    });
                 };
-
-                container.appendChild(epDiv);
+                container.appendChild(card);
             });
             updateFocusables();
         }
