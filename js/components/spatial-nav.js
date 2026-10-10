@@ -1,7 +1,7 @@
 (function () {
     const selector = '.tv-focusable:not(.home-hero__dot), .card, .btn, .nav-link, .hero-btn, [data-focusable]';
     let focusedElement = null;
-    let moveQueue = [];
+    let queuedDirection = null;
     let framePending = false;
     let scrollFrame = 0;
     let lastNavbarElement = null;
@@ -11,6 +11,7 @@
     let onBack = () => false;
     let onInteraction = () => {};
     let onFocus = () => {};
+    let onReachEnd = () => {};
 
     function clearFocusStyle(element) {
         element.classList.remove('focused');
@@ -45,8 +46,13 @@
     function getVisibleElements(force = false) {
         if (!force && !focusablesDirty) return visibleElementsCache;
 
+        const exitDialog = document.getElementById('exitDialog');
+        const dialogIsActive = exitDialog && !exitDialog.hidden && exitDialog.classList.contains('is-open');
         const rows = new Map();
-        visibleElementsCache = Array.from(document.querySelectorAll(selector)).filter(element => {
+        const focusableNodes = dialogIsActive
+            ? exitDialog.querySelectorAll(selector)
+            : document.querySelectorAll(selector);
+        visibleElementsCache = Array.from(focusableNodes).filter(element => {
             if (element.matches(':disabled') || element.closest('[hidden], .hidden, [aria-hidden="true"]')) return false;
             const style = getComputedStyle(element);
             if (style.display === 'none' || style.visibility === 'hidden' || element.getClientRects().length === 0) return false;
@@ -65,7 +71,7 @@
         const active = elements.includes(document.activeElement) ? document.activeElement : null;
         const selected = active || (elements.includes(focusedElement) ? focusedElement : null) ||
             elements.find(element => element.classList.contains('focused')) || null;
-        elements.forEach(element => {
+        document.querySelectorAll('.focused').forEach(element => {
             if (element !== selected && element.classList.contains('focused')) clearFocusStyle(element);
         });
         focusedElement = selected;
@@ -110,7 +116,7 @@
         if (navbar) return elements.filter(element => navbar.contains(element));
         if (current.closest('#catalogContainer') && current.dataset.row) {
             const row = getCatalogRows(elements).find(items => items.includes(current));
-            if (row) return row;
+            if (row) return row.filter(element => element === current || !element.dataset.navId?.startsWith('more-'));
         }
         return elements;
     }
@@ -223,6 +229,17 @@
             return;
         }
 
+        const exitDialog = document.getElementById('exitDialog');
+        if (exitDialog && !exitDialog.hidden && exitDialog.classList.contains('is-open')) {
+            const dialogElements = elements.filter(element => exitDialog.contains(element));
+            const currentIndex = dialogElements.indexOf(current);
+            if (dialogElements.length) {
+                const nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % dialogElements.length;
+                setFocus(dialogElements[nextIndex], false, elements);
+            }
+            return;
+        }
+
         if (moveBetweenSections(current, direction, elements)) return;
         if ((direction === 'left' || direction === 'right') && moveWithinHero(current, direction, elements)) return;
         if ((direction === 'up' || direction === 'down') && moveBetweenRows(current, direction, elements)) return;
@@ -262,6 +279,9 @@
         });
 
         if (best) setFocus(best.element, true, elements);
+        else if (direction === 'right' && current.closest('#catalogContainer') && current.dataset.row) {
+            onReachEnd(current.dataset.row, current);
+        }
     }
 
     function handleKeydown(event) {
@@ -277,16 +297,25 @@
             event.preventDefault();
             event.stopPropagation();
             onInteraction();
-            moveQueue.push(direction);
+            queuedDirection = direction;
             if (!framePending) {
                 framePending = true;
                 requestAnimationFrame(() => {
                     framePending = false;
-                    const queuedMoves = moveQueue;
-                    moveQueue = [];
-                    queuedMoves.forEach(move);
+                    const nextDirection = queuedDirection;
+                    queuedDirection = null;
+                    if (nextDirection) move(nextDirection);
                 });
             }
+            return;
+        }
+
+        const exitDialog = document.getElementById('exitDialog');
+        const exitDialogOpen = exitDialog && !exitDialog.hidden && exitDialog.classList.contains('is-open');
+        if (exitDialogOpen && event.key === 'Tab') {
+            event.preventDefault();
+            event.stopPropagation();
+            move(event.shiftKey ? 'left' : 'right');
             return;
         }
 
@@ -300,7 +329,8 @@
             return;
         }
 
-        if (event.key === 'Backspace' || event.keyCode === 8 || event.key === 'Escape') {
+        if (event.key === 'Backspace' || event.keyCode === 8 || event.key === 'Escape' ||
+            event.key === 'GoBack' || event.key === 'BrowserBack' || event.keyCode === 4) {
             event.preventDefault();
             event.stopPropagation();
             if (!onBack()) history.back();
@@ -312,6 +342,7 @@
         onBack = options.onBack || onBack;
         onInteraction = options.onInteraction || onInteraction;
         onFocus = options.onFocus || onFocus;
+        onReachEnd = options.onReachEnd || onReachEnd;
         refresh();
         document.addEventListener('keydown', handleKeydown, true);
         document.addEventListener('focusin', event => {
