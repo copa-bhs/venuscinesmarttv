@@ -493,7 +493,8 @@
     </style>
     <link rel="stylesheet" href="/css/styles.css?v=tv-home-design-20261010-3">
     <style>
-        .home-hero {
+        .home-hero-shell {
+            position: relative;
             box-sizing: border-box;
             width: calc(100% - 64px);
             max-width: 1280px;
@@ -501,20 +502,36 @@
             min-height: 300px;
             max-height: 480px;
             margin: 28px auto 0;
+            overflow: visible;
+        }
+        .home-hero {
+            position: absolute;
+            inset: 0;
+            box-sizing: border-box;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            max-height: none;
+            margin: 0;
             overflow: hidden;
             border: 1px solid rgba(255, 255, 255, .16);
             border-radius: 16px;
             background: #111;
         }
-        .home-hero__content { inset: auto 24px 16px; width: auto; max-width: min(620px, calc(100% - 48px)); }
+        .home-hero-shell.skeleton .home-hero { background: #1a1a1a; }
+        .home-hero-shell.is-loading .home-hero__content > :not(.home-hero__logo-wrap),
+        .home-hero-shell.is-loading .home-hero__action { visibility: hidden; }
+        .home-hero-shell.is-loading .home-hero__logo-wrap { background: #1a1a1a; animation: inline-pulse 1.5s ease-in-out infinite; }
+        .home-hero__content { inset: auto 24px 66px; width: auto; max-width: min(620px, calc(100% - 48px)); }
         .home-hero__logo-wrap { min-height: 0; margin-bottom: 8px; }
         .home-hero__logo { max-height: 48px; }
         .home-hero__title { margin-bottom: 7px; font-size: 25px; line-height: 1.08; }
         .home-hero__meta { margin-bottom: 6px; font-size: 12px; }
         .home-hero__meta .badge-classificacao { min-width: 24px; height: 20px; padding: 0 6px; border-radius: 3px; font-size: 11px; }
         .home-hero__description { max-width: 560px; margin-bottom: 12px; font-size: 13px; line-height: 1.35; line-clamp: 2; -webkit-line-clamp: 2; }
-        .home-hero__actions { gap: 10px; }
-        .home-hero__actions button { min-height: 38px; padding: 8px 16px; border-radius: 6px; font-size: 14px; }
+        .home-hero__action { position: absolute; z-index: 3; bottom: 16px; display: inline-flex; align-items: center; justify-content: center; min-height: 38px; padding: 8px 10px; border-radius: 6px; font-size: 14px; }
+        .home-hero__action--play { left: 24px; width: 116px; }
+        .home-hero__action--list { left: 150px; width: 146px; }
         .home-hero__dots {
             position: relative;
             bottom: auto;
@@ -552,14 +569,16 @@
             transition: none !important;
         }
         @media (max-width: 760px) {
-            .home-hero { width: calc(100% - 32px); height: 46vh; min-height: 280px; max-height: 400px; }
-            .home-hero__content { inset: auto 16px 14px; max-width: calc(100% - 32px); }
+            .home-hero-shell { width: calc(100% - 32px); height: 46vh; min-height: 280px; max-height: 400px; }
+            .home-hero__content { inset: auto 16px 64px; max-width: calc(100% - 32px); }
             .home-hero__title { font-size: 21px; }
             .home-hero__description { font-size: 12px; }
-            .home-hero__actions button { min-height: 36px; padding: 7px 12px; font-size: 13px; }
+            .home-hero__action { bottom: 14px; min-height: 36px; padding: 7px 8px; font-size: 13px; }
+            .home-hero__action--play { left: 16px; width: 105px; }
+            .home-hero__action--list { left: 129px; width: 132px; }
         }
     </style>
-    <script defer src="/js/components/spatial-nav.js?v=tv-home-design-20261010-4"></script>
+    <script defer src="/js/components/spatial-nav.js?v=tv-home-design-20261010-5"></script>
     <script defer src="/js/components/skeleton.js"></script>
     <script defer src="/js/components/slider.js"></script>
     <script defer src="/js/components/card.js?v=tv-home-design-20261010-3"></script>
@@ -595,26 +614,26 @@
 
     <main id="catalogPage" class="flex-grow overflow-y-auto no-scrollbar pb-16">
         <!-- Hero Section with Skeleton Support -->
-        <section id="heroSection" class="home-hero skeleton tv-focusable" data-nav-id="hero-card" data-row="hero" tabindex="0" aria-label="Destaque principal">
-            <img id="heroImageA" class="home-hero__image" alt="" loading="eager" decoding="async" fetchpriority="high">
-            <img id="heroImageB" class="home-hero__image" alt="" loading="eager" decoding="async" fetchpriority="high">
-            <div class="home-hero__shade"></div>
-            <div class="home-hero__content">
-                <div id="heroLogoWrap" class="home-hero__logo-wrap">
-                    <img id="heroLogo" class="home-hero__logo" alt="" loading="eager" decoding="async" fetchpriority="high">
-                </div>
-                <h1 id="heroTitle" class="home-hero__title"></h1>
-                <div id="heroMeta" class="home-hero__meta"></div>
-                <p id="heroDesc" class="home-hero__description line-clamp-3"></p>
-                <div class="home-hero__actions">
-                    <button type="button" data-nav-id="hero-play" data-row="hero" data-focusable="true" id="heroPlayBtn" class="tv-focusable hero-btn btn-assistir bg-white hover:bg-gray-200 text-black cursor-pointer">
-                        <i class="fa-solid fa-play mr-2" aria-hidden="true"></i>Assistir
-                    </button>
-                    <button type="button" data-nav-id="hero-info" data-row="hero" data-focusable="true" id="heroInfoBtn" class="tv-focusable hero-btn btn-minha-lista home-hero__list cursor-pointer" aria-label="Adicionar à Minha Lista">
-                        <span id="heroListIcon" aria-hidden="true">+</span> <span id="heroListText">Minha Lista</span>
-                    </button>
+        <section id="heroSection" class="home-hero-shell skeleton" aria-label="Destaques">
+            <div id="hero-card" class="home-hero tv-focusable" data-nav-id="hero-card" data-row="hero" tabindex="0" role="group" aria-label="Destaque principal">
+                <img id="heroImageA" class="home-hero__image" alt="" loading="eager" decoding="async" fetchpriority="high">
+                <img id="heroImageB" class="home-hero__image" alt="" loading="eager" decoding="async" fetchpriority="high">
+                <div class="home-hero__shade"></div>
+                <div class="home-hero__content">
+                    <div id="heroLogoWrap" class="home-hero__logo-wrap">
+                        <img id="heroLogo" class="home-hero__logo" alt="" loading="eager" decoding="async" fetchpriority="high">
+                    </div>
+                    <h1 id="heroTitle" class="home-hero__title"></h1>
+                    <div id="heroMeta" class="home-hero__meta"></div>
+                    <p id="heroDesc" class="home-hero__description line-clamp-3"></p>
                 </div>
             </div>
+            <button type="button" data-nav-id="hero-play" data-row="hero" data-focusable="true" id="heroPlayBtn" class="tv-focusable hero-btn home-hero__action home-hero__action--play btn-assistir bg-white hover:bg-gray-200 text-black cursor-pointer">
+                <i class="fa-solid fa-play mr-2" aria-hidden="true"></i>Assistir
+            </button>
+            <button type="button" data-nav-id="hero-info" data-row="hero" data-focusable="true" id="heroInfoBtn" class="tv-focusable hero-btn home-hero__action home-hero__action--list btn-minha-lista home-hero__list cursor-pointer" aria-label="Adicionar à Minha Lista">
+                <span id="heroListIcon" aria-hidden="true">+</span> <span id="heroListText">Minha Lista</span>
+            </button>
         </section>
         <div id="heroDots" class="home-hero__dots" aria-label="Navegação dos destaques"></div>
 
@@ -1021,6 +1040,7 @@
                 onFocus: syncFocusedElement,
                 onInteraction: () => VenusSlider.pause(15000)
             });
+            VenusSpatialNav.focus(document.getElementById('nav-home'), false);
             const catalogPage = document.getElementById('catalogPage');
             catalogPage.addEventListener('scroll', () => {
                 document.getElementById('navbar').classList.toggle('scrolled', catalogPage.scrollTop > 16);
@@ -1049,9 +1069,6 @@
                 VenusSkeleton.finishHome(document.getElementById('heroSection'));
                 updateFocusables();
                 hideAppSplash();
-                requestAnimationFrame(() => {
-                    setFocus(document.getElementById('heroSection'));
-                });
                 void hydrateCatalogData();
             } catch (error) {
                 homeDashboard = null;

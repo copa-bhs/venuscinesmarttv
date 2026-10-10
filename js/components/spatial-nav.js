@@ -101,25 +101,26 @@
 
     function moveBetweenSections(current, direction, elements) {
         const navbar = document.getElementById('navbar');
-        const hero = document.getElementById('heroSection');
-        if (!navbar || !hero) return false;
+        const heroSection = document.getElementById('heroSection');
+        const heroCard = elements.find(element => element.dataset.navId === 'hero-card');
+        if (!navbar || !heroSection || !heroCard) return false;
 
         if (direction === 'down' && navbar.contains(current)) {
-            setFocus(hero, true, elements);
+            setFocus(heroCard, true, elements);
             return true;
         }
 
-        if (direction === 'up' && current === hero) {
-            const target = lastNavbarElement && elements.includes(lastNavbarElement)
-                ? lastNavbarElement
-                : elements.find(element => element.dataset.navId === 'tab-home') ||
-                    elements.find(element => element.closest('#navbar'));
+        if (heroSection.contains(current) && direction === 'up') {
+            const target = elements.find(element => element.dataset.navId === 'tab-home') ||
+                (lastNavbarElement && elements.includes(lastNavbarElement) ? lastNavbarElement : null) ||
+                elements.find(element => element.closest('#navbar'));
             if (target) setFocus(target, true, elements);
             return true;
         }
 
-        if (direction === 'up' && hero.contains(current) && current !== hero) {
-            setFocus(hero, true, elements);
+        if (heroSection.contains(current) && direction === 'down') {
+            const firstRow = getCatalogRows(elements)[0];
+            if (firstRow?.length) setFocus(firstRow[0], true, elements);
             return true;
         }
 
@@ -127,23 +128,23 @@
     }
 
     function moveWithinHero(current, direction, elements) {
-        const hero = document.getElementById('heroSection');
-        if (!hero || !hero.contains(current)) return false;
+        const heroSection = document.getElementById('heroSection');
+        const heroCard = elements.find(element => element.dataset.navId === 'hero-card');
+        if (!heroSection || !heroCard || !heroSection.contains(current)) return false;
         const actions = [
             elements.find(element => element.dataset.navId === 'hero-play'),
             elements.find(element => element.dataset.navId === 'hero-info')
         ].filter(Boolean);
-        if (current === hero) {
+        if (current === heroCard) {
             const target = direction === 'right' ? actions[0] : actions[actions.length - 1];
             if (target) setFocus(target, true, elements);
             return true;
         }
         const actionIndex = actions.indexOf(current);
         if (actionIndex >= 0) {
-            if (direction === 'up') setFocus(hero, true, elements);
-            else if (direction === 'left') setFocus(hero, true, elements);
+            if (direction === 'left') setFocus(heroCard, true, elements);
             else if (direction === 'right') {
-                setFocus(actions[actionIndex + 1] || hero, true, elements);
+                setFocus(actions[actionIndex + 1] || heroCard, true, elements);
             }
             return true;
         }
@@ -151,17 +152,15 @@
     }
 
     function moveBetweenRows(current, direction, elements) {
-        const hero = document.getElementById('heroSection');
+        const heroSection = document.getElementById('heroSection');
         const rows = getCatalogRows(elements);
-        if (hero?.contains(current)) {
-            if (direction === 'down' && rows[0]?.length) setFocus(rows[0][0], true, elements);
-            return true;
-        }
+        if (heroSection?.contains(current)) return false;
 
         const currentRowIndex = rows.findIndex(row => row.includes(current));
         if (currentRowIndex < 0) return false;
         if (direction === 'up') {
-            const targetRow = currentRowIndex === 0 ? [hero] : rows[currentRowIndex - 1];
+            const heroCard = elements.find(element => element.dataset.navId === 'hero-card');
+            const targetRow = currentRowIndex === 0 ? [heroCard].filter(Boolean) : rows[currentRowIndex - 1];
             const target = closestByHorizontalPosition(targetRow.filter(element => elements.includes(element)), current);
             if (target) setFocus(target, true, elements);
             return true;
