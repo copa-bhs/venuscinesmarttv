@@ -53,13 +53,14 @@
             outline: none !important;
         }
         .tv-focusable {
-            transition: transform 150ms ease-out, opacity 150ms ease-out !important;
+            transition: opacity 150ms ease-out !important;
         }
         .tv-focusable.focused {
-            outline: none !important;
+            outline: 3px solid #ffffff !important;
+            outline-offset: 2px !important;
             border-color: #ffffff !important;
-            box-shadow: 0 0 0 3px #ffffff, 0 8px 24px rgba(0, 0, 0, 0.8) !important;
-            transform: scale(1.06) !important;
+            box-shadow: none !important;
+            transform: none !important;
             z-index: 10 !important;
         }
         .kb-key.focused {
@@ -491,6 +492,72 @@
         }
     </style>
     <link rel="stylesheet" href="/css/styles.css?v=tv-home-design-20261010-3">
+    <style>
+        .home-hero {
+            box-sizing: border-box;
+            width: calc(100% - 64px);
+            max-width: 1280px;
+            height: 44vh;
+            min-height: 280px;
+            max-height: 440px;
+            margin: 28px auto 0;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, .16);
+            border-radius: 16px;
+            background: #111;
+        }
+        .home-hero__content { inset: auto 24px 16px; width: auto; max-width: min(620px, calc(100% - 48px)); }
+        .home-hero__logo-wrap { min-height: 0; margin-bottom: 8px; }
+        .home-hero__logo { max-height: 48px; }
+        .home-hero__title { margin-bottom: 7px; font-size: 25px; line-height: 1.08; }
+        .home-hero__meta { margin-bottom: 6px; font-size: 12px; }
+        .home-hero__description { max-width: 560px; margin-bottom: 12px; font-size: 13px; line-height: 1.35; line-clamp: 2; -webkit-line-clamp: 2; }
+        .home-hero__actions { gap: 10px; }
+        .home-hero__actions button { min-height: 38px; padding: 8px 16px; border-radius: 6px; font-size: 14px; }
+        .home-hero__dots {
+            position: relative;
+            bottom: auto;
+            left: auto;
+            width: fit-content;
+            justify-content: center;
+            gap: 7px;
+            margin: 12px auto 0;
+            transform: none;
+        }
+        .home-hero__dot,
+        .home-hero__dot.is-active {
+            width: 7px;
+            min-width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #777;
+            transform: none;
+        }
+        .home-hero__dot.is-active { background: #E50914; }
+        #catalogPage, .home-collection-track, .carousel-track { scroll-behavior: auto !important; }
+        .tv-focusable.focused,
+        .tv-focusable:focus-visible,
+        [data-focusable].focused,
+        [data-focusable]:focus-visible {
+            outline: 3px solid #fff !important;
+            outline-offset: 2px !important;
+            box-shadow: none !important;
+            transform: none !important;
+            transition: none !important;
+        }
+        .tv-focusable.focused *,
+        .tv-focusable:focus-visible * {
+            transform: none !important;
+            transition: none !important;
+        }
+        @media (max-width: 760px) {
+            .home-hero { width: calc(100% - 32px); height: 42vh; min-height: 260px; max-height: 360px; }
+            .home-hero__content { inset: auto 16px 14px; max-width: calc(100% - 32px); }
+            .home-hero__title { font-size: 21px; }
+            .home-hero__description { font-size: 12px; }
+            .home-hero__actions button { min-height: 36px; padding: 7px 12px; font-size: 13px; }
+        }
+    </style>
     <script defer src="/js/components/spatial-nav.js?v=tv-home-design-20261010-3"></script>
     <script defer src="/js/components/skeleton.js"></script>
     <script defer src="/js/components/slider.js"></script>
@@ -527,7 +594,7 @@
 
     <main id="catalogPage" class="flex-grow overflow-y-auto no-scrollbar pb-16">
         <!-- Hero Section with Skeleton Support -->
-        <section id="heroSection" class="home-hero skeleton" aria-label="Destaques">
+        <section id="heroSection" class="home-hero skeleton tv-focusable" data-nav-id="hero-card" data-row="hero" tabindex="0" aria-label="Destaque principal">
             <img id="heroImageA" class="home-hero__image" alt="" loading="eager" decoding="async" fetchpriority="high">
             <img id="heroImageB" class="home-hero__image" alt="" loading="eager" decoding="async" fetchpriority="high">
             <div class="home-hero__shade"></div>
@@ -547,8 +614,8 @@
                     </button>
                 </div>
             </div>
-            <div id="heroDots" class="home-hero__dots" aria-label="Navegação dos destaques"></div>
         </section>
+        <div id="heroDots" class="home-hero__dots" aria-label="Navegação dos destaques"></div>
 
         <section id="platformBrowse" class="hidden px-8 mt-5" aria-label="Categorias">
             <h2 class="text-xs lg:text-sm font-bold text-white tracking-wide mb-2.5">CATEGORIAS</h2>
@@ -700,10 +767,7 @@
         let catalogCategories = { filmes: [], series: [] };
         let currentCatalogCategory = '';
         let focusableElements = [];
-        let currentFocusIndex = 0;
         let focusedElement = null;
-        let focusFrame = 0;
-        let focusRefreshFrame = 0;
         const scrollAnimationFrames = new WeakMap();
         const catalogApiPages = {
             movies: { page: 0, hasNext: false, category: '' },
@@ -837,60 +901,6 @@
                 return;
             }
             images.forEach(image => lazyImageObserver.observe(image));
-        }
-
-        function debounceFocusRefresh() {
-            if (focusRefreshFrame) return;
-            focusRefreshFrame = requestAnimationFrame(() => {
-                focusRefreshFrame = 0;
-                refreshFocusables();
-            });
-        }
-
-        function refreshFocusables() {
-            const focusedNavId = focusedElement?.dataset.navId;
-            focusableElements = Array.from(document.querySelectorAll('.tv-focusable')).filter(element =>
-                !element.closest('.hidden') && element.style.display !== 'none'
-            );
-            let nextIndex = focusedNavId
-                ? focusableElements.findIndex(element => element.dataset.navId === focusedNavId)
-                : -1;
-            if (nextIndex < 0) nextIndex = Math.min(currentFocusIndex, Math.max(0, focusableElements.length - 1));
-            currentFocusIndex = nextIndex;
-            focusedElement = focusableElements[currentFocusIndex] || null;
-            focusedElement?.classList.add('focused');
-        }
-
-        function debounceFocusPaint(index) {
-            if (focusFrame) cancelAnimationFrame(focusFrame);
-            focusFrame = requestAnimationFrame(() => {
-                focusFrame = 0;
-                const nextElement = focusableElements[index];
-                if (!nextElement) return;
-                if (focusedElement !== nextElement) focusedElement?.classList.remove('focused');
-                focusedElement = nextElement;
-                focusedElement.classList.add('focused');
-                keepFocusedElementVisible(focusedElement);
-            });
-        }
-
-        function keepFocusedElementVisible(element) {
-            let parent = element.parentElement;
-            while (parent && parent !== document.body) {
-                const style = getComputedStyle(parent);
-                const parentRect = parent.getBoundingClientRect();
-                let rect = element.getBoundingClientRect();
-                if (parent.scrollWidth > parent.clientWidth && /auto|scroll/.test(style.overflowX)) {
-                    if (rect.left < parentRect.left + 10) parent.scrollLeft -= parentRect.left + 10 - rect.left;
-                    else if (rect.right > parentRect.right - 10) parent.scrollLeft += rect.right - parentRect.right + 10;
-                }
-                rect = element.getBoundingClientRect();
-                if (parent.scrollHeight > parent.clientHeight && /auto|scroll/.test(style.overflowY)) {
-                    if (rect.top < parentRect.top + 8) parent.scrollTop -= parentRect.top + 8 - rect.top;
-                    else if (rect.bottom > parentRect.bottom - 8) parent.scrollTop += rect.bottom - parentRect.bottom + 8;
-                }
-                parent = parent.parentElement;
-            }
         }
 
         function scrollElementTo(scroller, target, duration = 180) {
@@ -1028,8 +1038,7 @@
                 updateFocusables();
                 hideAppSplash();
                 requestAnimationFrame(() => {
-                    const playIndex = focusableElements.indexOf(document.getElementById('heroPlayBtn'));
-                    if (playIndex >= 0) setFocus(playIndex);
+                    setFocus(document.getElementById('heroSection'));
                 });
                 void hydrateCatalogData();
             } catch (error) {
@@ -1744,21 +1753,20 @@
 
         // --- TV REMOTE CONTROL NAVIGATION ENGINE (D-PAD) ---
         function updateFocusables() {
-            VenusSpatialNav.refresh();
-            debounceFocusRefresh();
+            focusableElements = VenusSpatialNav.refresh();
+            focusedElement = focusableElements.includes(document.activeElement)
+                ? document.activeElement
+                : focusableElements.find(element => element.classList.contains('focused')) || null;
         }
 
-        function setFocus(index) {
-            if (focusableElements.length === 0) refreshFocusables();
-            if (focusableElements.length === 0) return;
-            currentFocusIndex = (index + focusableElements.length) % focusableElements.length;
-            VenusSpatialNav.focus(focusableElements[currentFocusIndex]);
+        function setFocus(element) {
+            if (typeof element === 'number') element = focusableElements[element];
+            if (element) VenusSpatialNav.focus(element);
         }
 
         function syncFocusedElement(element) {
             if (focusedElement && focusedElement !== element) focusedElement.classList.remove('focused');
             focusedElement = element;
-            currentFocusIndex = focusableElements.indexOf(element);
             element?.classList.add('focused');
         }
 

@@ -1,8 +1,9 @@
 (function () {
-    const selector = '.tv-focusable, .card, .btn, .nav-link, .hero-btn, [data-focusable]';
+    const selector = '.tv-focusable:not(.home-hero__dot), .card, .btn, .nav-link, .hero-btn, [data-focusable]';
     let focusedElement = null;
     let moveQueue = [];
     let framePending = false;
+    let scrollFrame = 0;
     let onBack = () => false;
     let onInteraction = () => {};
     let onFocus = () => {};
@@ -15,54 +16,22 @@
 
     function applyFocusStyle(element) {
         element.classList.add('focused');
-        element.style.setProperty('outline', 'none', 'important');
+        element.style.setProperty('outline', '3px solid #ffffff', 'important');
+        element.style.setProperty('outline-offset', '2px', 'important');
         element.style.setProperty('border-color', '#ffffff', 'important');
-        element.style.setProperty('box-shadow', '0 0 0 3px #ffffff, 0 8px 24px rgba(0,0,0,.8)', 'important');
-        element.style.setProperty('transform', 'scale(1.06)', 'important');
+        element.style.setProperty('box-shadow', 'none', 'important');
+        element.style.setProperty('transform', 'none', 'important');
         element.style.setProperty('z-index', '10', 'important');
     }
 
     function revealFocusedElement(element) {
-        let parent = element.parentElement;
-        let scrolled = false;
-        while (parent && parent !== document.body) {
-            const style = getComputedStyle(parent);
-            const canScrollX = parent.scrollWidth > parent.clientWidth && /auto|scroll/.test(style.overflowX);
-            const canScrollY = parent.scrollHeight > parent.clientHeight && /auto|scroll/.test(style.overflowY);
-            if (canScrollX) {
-                const parentRect = parent.getBoundingClientRect();
-                let elementRect = element.getBoundingClientRect();
-                const inset = Math.max(12, (parent.clientWidth - elementRect.width) / 2);
-                let nextLeft = parent.scrollLeft;
-                if (elementRect.left < parentRect.left + inset) nextLeft += elementRect.left - parentRect.left - inset;
-                else if (elementRect.right > parentRect.right - inset) nextLeft += elementRect.right - parentRect.right + inset;
-                if (Math.abs(nextLeft - parent.scrollLeft) > 1) {
-                    scroll(parent, nextLeft, parent.scrollTop);
-                    scrolled = true;
-                }
-            }
-            if (canScrollY) {
-                const parentRect = parent.getBoundingClientRect();
-                const elementRect = element.getBoundingClientRect();
-                let nextTop = parent.scrollTop;
-                if (elementRect.top < parentRect.top + 8) nextTop += elementRect.top - parentRect.top - 8;
-                else if (elementRect.bottom > parentRect.bottom - 8) nextTop += elementRect.bottom - parentRect.bottom + 8;
-                if (Math.abs(nextTop - parent.scrollTop) > 1) {
-                    scroll(parent, parent.scrollLeft, nextTop);
-                    scrolled = true;
-                }
-            }
-            parent = parent.parentElement;
-        }
-        if (!scrolled) element.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
-    }
-
-    function scroll(element, left, top) {
-        try { element.scrollTo({ left, top, behavior: 'smooth' }); }
-        catch {
-            element.scrollLeft = left;
-            element.scrollTop = top;
-        }
+        if (scrollFrame) cancelAnimationFrame(scrollFrame);
+        scrollFrame = requestAnimationFrame(() => {
+            scrollFrame = 0;
+            if (!element.isConnected) return;
+            try { element.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' }); }
+            catch { element.scrollIntoView(); }
+        });
     }
 
     function getVisibleElements() {
@@ -107,6 +76,76 @@
         return Math.max(0, Math.min(endA, endB) - Math.max(startA, startB));
     }
 
+    function getCatalogRows(elements) {
+        const rows = new Map();
+        elements.forEach(element => {
+            const rowId = element.dataset.row;
+            if (!rowId || rowId === 'hero' || !element.closest('#catalogContainer')) return;
+            if (!rows.has(rowId)) rows.set(rowId, []);
+            rows.get(rowId).push(element);
+        });
+        return Array.from(rows.values());
+    }
+
+    function closestByHorizontalPosition(elements, reference) {
+        const referenceRect = reference.getBoundingClientRect();
+        const referenceX = referenceRect.left + referenceRect.width / 2;
+        return elements.reduce((best, element) => {
+            const rect = element.getBoundingClientRect();
+            const distance = Math.abs(rect.left + rect.width / 2 - referenceX);
+            return !best || distance < best.distance ? { element, distance } : best;
+        }, null)?.element || null;
+    }
+
+    function moveWithinHero(current, direction, elements) {
+        const hero = document.getElementById('heroSection');
+        if (!hero || !hero.contains(current)) return false;
+        const actions = [
+            document.getElementById('heroPlayBtn'),
+            document.getElementById('heroInfoBtn')
+        ].filter(element => elements.includes(element));
+        if (current === hero) {
+            const target = direction === 'right' ? actions[0] : actions[actions.length - 1];
+            if (target) setFocus(target, true, elements);
+            return true;
+        }
+        const actionIndex = actions.indexOf(current);
+        if (actionIndex >= 0) {
+            if (direction === 'up') setFocus(hero, true, elements);
+            else if (direction === 'left' || direction === 'right') {
+                const nextIndex = actionIndex + (direction === 'right' ? 1 : -1);
+                if (actions[nextIndex]) setFocus(actions[nextIndex], true, elements);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    function moveBetweenRows(current, direction, elements) {
+        const hero = document.getElementById('heroSection');
+        const rows = getCatalogRows(elements);
+        if (hero?.contains(current)) {
+            if (direction === 'down' && rows[0]?.length) setFocus(rows[0][0], true, elements);
+            return true;
+        }
+
+        const currentRowIndex = rows.findIndex(row => row.includes(current));
+        if (currentRowIndex < 0) return false;
+        if (direction === 'up') {
+            const targetRow = currentRowIndex === 0 ? [hero] : rows[currentRowIndex - 1];
+            const target = closestByHorizontalPosition(targetRow.filter(element => elements.includes(element)), current);
+            if (target) setFocus(target, true, elements);
+            return true;
+        }
+        if (direction === 'down') {
+            const targetRow = rows[currentRowIndex + 1];
+            const target = targetRow && closestByHorizontalPosition(targetRow, current);
+            if (target) setFocus(target, true, elements);
+            return true;
+        }
+        return false;
+    }
+
     // Escolhe o vizinho visível mais próximo na direção solicitada.
     function move(direction) {
         const elements = refresh();
@@ -118,6 +157,9 @@
             setFocus(elements[0]);
             return;
         }
+
+        if ((direction === 'left' || direction === 'right') && moveWithinHero(current, direction, elements)) return;
+        if ((direction === 'up' || direction === 'down') && moveBetweenRows(current, direction, elements)) return;
 
         const currentRect = current.getBoundingClientRect();
         const currentCenterX = currentRect.left + currentRect.width / 2;
