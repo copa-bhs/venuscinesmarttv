@@ -1,34 +1,26 @@
-// Home page logic
+(function () {
+    // Exibe o estado inicial e carrega a Home organizada pela API.
+    // Busca e valida os destaques e as coleções da API.
+    async function fetchDashboard() {
+        const hero = document.getElementById('heroSection');
+        const container = document.getElementById('catalogContainer');
+        window.VenusSkeleton?.renderHome(hero, container);
+        try {
+            const response = await fetch('https://cine.venusdev.xyz/home', {
+                headers: { Accept: 'application/json' }
+            });
+            if (!response.ok) throw new Error(`Falha ao carregar a Home (${response.status}).`);
+            const data = await response.json();
+            if (!data || !Array.isArray(data.hero) || !Array.isArray(data.colecoes)) {
+                throw new Error('A API retornou dados incompletos para a Home.');
+            }
+            console.log(`[Home] loaded ${data.hero.length} hero slides and ${data.colecoes.length} collections`);
+            return data;
+        } catch (error) {
+            console.error('[Home] failed to load dashboard:', error);
+            throw error;
+        }
+    }
 
-// Function to load home page content
-function loadHomePage() {
-    const app = document.getElementById('app');
-    app.innerHTML = `
-        <div class="h-full w-full flex flex-col">
-            <div class="h-16 w-full flex items-center justify-between px-4 bg-venus-black">
-                <div class="text-venus-red text-2xl font-bold">Vênus Cine</div>
-                <div class="flex space-x-4">
-                    <button class="text-white" onclick="loadHomePage()">Home</button>
-                    <button class="text-white" onclick="loadMoviesPage()">Movies</button>
-                    <button class="text-white" onclick="loadSeriesPage()">Series</button>
-                    <button class="text-white" onclick="loadWatchlistPage()">Watchlist</button>
-                    <button class="text-white" onclick="loadSearchPage()">Search</button>
-                    <button class="text-white" onclick="loadSettingsPage()">Settings</button>
-                </div>
-            </div>
-            <div class="flex-1 overflow-y-auto p-4">
-                <div class="text-white text-2xl font-bold mb-4">Featured Movies</div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    <!-- Featured movies will be loaded here -->
-                </div>
-                <div class="text-white text-2xl font-bold mt-8 mb-4">Featured Series</div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    <!-- Featured series will be loaded here -->
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// Load home page when the script is loaded
-loadHomePage();
+    window.VenusHome = { fetchDashboard };
+})();

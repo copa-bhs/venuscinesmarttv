@@ -52,14 +52,15 @@
             outline: none !important;
         }
         .tv-focusable {
-            transition: transform 120ms ease, opacity 120ms ease, border-color 120ms ease, box-shadow 120ms ease !important;
+            transition: transform 150ms ease-out, opacity 150ms ease-out, border-color 150ms ease-out, box-shadow 150ms ease-out !important;
         }
         .tv-focusable.focused {
-            outline: none !important;
-            border-color: rgba(229, 9, 20, 0.95) !important;
-            box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.95), 0 0 24px rgba(229, 9, 20, 0.35) !important;
-            transform: translateY(-1px) scale(1.01);
-            z-index: 50 !important;
+            outline: 3px solid #ffffff !important;
+            outline-offset: 3px !important;
+            border-color: #ffffff !important;
+            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.88), 0 0 22px rgba(255, 255, 255, 0.8), 0 12px 32px rgba(0, 0, 0, 0.8) !important;
+            transform: scale(1.08) !important;
+            z-index: 110 !important;
         }
         .kb-key.focused {
             background-color: #E50914 !important;
@@ -498,6 +499,12 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script defer src="/js/components/spatial-nav.js"></script>
+    <script defer src="/js/components/skeleton.js"></script>
+    <script defer src="/js/components/slider.js"></script>
+    <script defer src="/js/components/card.js"></script>
+    <script defer src="/js/pages/home.js"></script>
 </head>
 <body class="h-screen w-screen flex flex-col overflow-hidden bg-[#070707]">
 
@@ -506,23 +513,20 @@
     </div>
 
 
-    <nav id="navbar" class="px-8 py-3.5 flex items-center justify-between bg-[#070707]/95 z-40 border-b border-gray-900">
-        <div class="flex items-center space-x-8">
-            <div class="flex items-center space-x-2">
-                <span class="text-venus-red font-extrabold text-xl tracking-wider">VÊNUS CINE</span>
-            </div>
-            <div class="flex space-x-2.5 bg-black/60 p-1.5 rounded-full border border-gray-800">
-                <button data-nav-id="tab-home" onclick="switchTab('home')" id="nav-home" class="tv-focusable px-4 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer text-white bg-venus-red shadow">Início</button>
-                <button data-nav-id="tab-movies" onclick="switchTab('movies')" id="nav-movies" class="tv-focusable px-4 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer text-gray-300 hover:text-white">Filmes</button>
-                <button data-nav-id="tab-series" onclick="switchTab('series')" id="nav-series" class="tv-focusable px-4 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer text-gray-300 hover:text-white">Séries</button>
-                <button data-nav-id="tab-watchlist" onclick="switchTab('watchlist')" id="nav-watchlist" class="tv-focusable px-4 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer text-gray-300 hover:text-white">Minha Lista</button>
-            </div>
+    <nav id="navbar" class="topbar">
+        <span class="topbar__brand">VÊNUS CINE</span>
+        <div class="topbar__links">
+            <button data-nav-id="tab-home" data-focusable="true" onclick="switchTab('home')" id="nav-home" class="tv-focusable nav-link active">Início</button>
+            <button data-nav-id="tab-movies" data-focusable="true" onclick="switchTab('movies')" id="nav-movies" class="tv-focusable nav-link">Filmes</button>
+            <button data-nav-id="tab-series" data-focusable="true" onclick="switchTab('series')" id="nav-series" class="tv-focusable nav-link">Séries</button>
+            <button data-nav-id="tab-watchlist" data-focusable="true" onclick="switchTab('watchlist')" id="nav-watchlist" class="tv-focusable nav-link">Minha Lista</button>
         </div>
-
-        <div class="flex items-center space-x-4">
-            <!-- Search Icon Trigger -->
-            <button data-nav-id="btn-search-trigger" onclick="openSearchModal()" class="tv-focusable bg-gray-900 hover:bg-gray-800 w-9 h-9 rounded-full flex items-center justify-center transition text-gray-200 cursor-pointer border border-gray-800 shadow" title="Pesquisar">
-                <i class="fa-solid fa-magnifying-glass text-xs text-venus-red"></i>
+        <div class="topbar__actions">
+            <button data-nav-id="btn-search-trigger" data-focusable="true" onclick="openSearchModal()" class="tv-focusable topbar__icon-button" title="Pesquisar" aria-label="Pesquisar">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            </button>
+            <button data-nav-id="btn-profile" data-focusable="true" onclick="openSettingsModal()" class="tv-focusable topbar__icon-button" title="Configurações" aria-label="Configurações">
+                <i class="fa-solid fa-user" aria-hidden="true"></i>
             </button>
         </div>
     </nav>
@@ -531,19 +535,21 @@
     <main id="catalogPage" class="flex-grow overflow-y-auto no-scrollbar pb-16">
         <!-- Hero Section with Skeleton Support -->
         <section id="heroSection" class="home-hero skeleton" aria-label="Destaques">
-            <div id="heroImageA" class="home-hero__image"></div>
-            <div id="heroImageB" class="home-hero__image"></div>
+            <img id="heroImageA" class="home-hero__image" alt="" fetchpriority="high">
+            <img id="heroImageB" class="home-hero__image" alt="">
             <div class="home-hero__shade"></div>
             <div class="home-hero__content">
-                <img id="heroLogo" class="home-hero__logo" alt="">
+                <div id="heroLogoWrap" class="home-hero__logo-wrap">
+                    <img id="heroLogo" class="home-hero__logo" alt="">
+                </div>
                 <h1 id="heroTitle" class="home-hero__title"></h1>
-                <p id="heroMeta" class="home-hero__meta"></p>
+                <div id="heroMeta" class="home-hero__meta"></div>
                 <p id="heroDesc" class="home-hero__description line-clamp-3"></p>
                 <div class="home-hero__actions">
-                    <button type="button" data-nav-id="hero-play" id="heroPlayBtn" class="tv-focusable bg-white hover:bg-gray-200 text-black cursor-pointer">
+                    <button type="button" data-nav-id="hero-play" data-row="hero" data-focusable="true" id="heroPlayBtn" class="tv-focusable hero-btn btn-assistir bg-white hover:bg-gray-200 text-black cursor-pointer">
                         <i class="fa-solid fa-play mr-2" aria-hidden="true"></i>Assistir
                     </button>
-                    <button type="button" data-nav-id="hero-info" id="heroInfoBtn" class="tv-focusable home-hero__list tv-focusable cursor-pointer" aria-label="Adicionar à Minha Lista">
+                    <button type="button" data-nav-id="hero-info" data-row="hero" data-focusable="true" id="heroInfoBtn" class="tv-focusable hero-btn btn-minha-lista home-hero__list cursor-pointer" aria-label="Adicionar à Minha Lista">
                         <span id="heroListIcon" aria-hidden="true">+</span> <span id="heroListText">Minha Lista</span>
                     </button>
                 </div>
@@ -687,7 +693,7 @@
                     <div class="detail-badges">
                         <span id="modalGroup" class="detail-pill detail-pill--muted">Categoria</span>
                     </div>
-                    <img id="modalTitleLogo" class="details-title-logo hidden" alt="">
+                    <img id="modalTitleLogo" class="details-title-logo hidden" alt="" loading="lazy">
                     <h2 id="modalTitle" class="netflix-title">Título</h2>
 
                     <div class="details-metadata" aria-label="Informações do título">
@@ -784,19 +790,15 @@
         let catalogData = { movies: [], series: [] };
         let homeDashboard = null;
         let homeHeroSlides = [];
-        let homeHeroIndex = 0;
-        let homeHeroLayer = null;
-        let homeHeroTimer = 0;
+        let activeHomeHeroItem = null;
         let seriesInfoCache = {};
         let watchlist = JSON.parse(localStorage.getItem('venus_watchlist_tv') || '[]');
         let currentSelectedItem = null;
         let currentHls = null;
         const MAX_CARDS_PER_ROW = 8;
-        const MAX_CATALOG_SECTIONS = 8;
         let batchSize = MAX_CARDS_PER_ROW;
         let currentGroupedCatalog = [];
         let renderedCategoryCount = 0;
-        const CATEGORY_BATCH_SIZE = MAX_CATALOG_SECTIONS;
         let currentSearchQuery = '';
         let searchMatches = [];
         let searchRenderCount = 0;
@@ -1163,14 +1165,21 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             initLazyImageObserver();
+            VenusSpatialNav.init({
+                onBack: handleBackNavigation,
+                onFocus: syncFocusedElement,
+                onInteraction: () => VenusSlider.pause(15000)
+            });
+            const catalogPage = document.getElementById('catalogPage');
+            catalogPage.addEventListener('scroll', () => {
+                document.getElementById('navbar').classList.toggle('scrolled', catalogPage.scrollTop > 16);
+            }, { passive: true });
             const androidBridge = window.AndroidBridge?.isAvailable?.() === true;
             const androidConfigured = androidBridge && AndroidBridge.isConfigured();
             let saved = androidBridge ? '' : (localStorage.getItem('venus_url_tv') || DEFAULT_URL);
             document.getElementById('xtreamUrlInput').value = saved;
             parseUrl(saved);
             initApp();
-
-            window.addEventListener('keydown', handleRemoteControl);
         });
 
         function parseUrl(urlStr) {
@@ -1294,18 +1303,22 @@
             apiConnectionError = '';
 
             try {
-                const payload = await requestHomeData();
+                const homeRequest = VenusHome.fetchDashboard();
+                hideAppSplash();
+                const payload = await homeRequest;
                 applyHomeDashboard(payload);
                 rebuildCatalogSearchIndex();
-                document.getElementById('platformBrowse').classList.add('hidden');
+                document.getElementById('platformBrowse').classList.remove('hidden');
                 switchTab('home');
                 setupHomeHero();
+                VenusSkeleton.finishHome(document.getElementById('heroSection'));
                 updateFocusables();
                 hideAppSplash();
                 requestAnimationFrame(() => {
                     const playIndex = focusableElements.indexOf(document.getElementById('heroPlayBtn'));
                     if (playIndex >= 0) setFocus(playIndex);
                 });
+                void hydrateCatalogData();
                 return;
             } catch (error) {
                 homeDashboard = null;
@@ -1344,16 +1357,6 @@
             } catch (err) {
                 loadFallbackOrProxyData(urlInput);
             }
-        }
-
-        async function requestHomeData() {
-            const response = await fetch('https://cine.venusdev.xyz/home', { headers: { Accept: 'application/json' } });
-            if (!response.ok) throw new Error(`Falha ao carregar a Home (${response.status}).`);
-            const payload = await response.json();
-            if (!payload || !Array.isArray(payload.hero) || !Array.isArray(payload.colecoes)) {
-                throw new Error('A resposta da Home tem formato inválido.');
-            }
-            return payload;
         }
 
         function mapHomeItem(item) {
@@ -1398,78 +1401,23 @@
         }
 
         function setupHomeHero() {
-            clearInterval(homeHeroTimer);
-            homeHeroIndex = 0;
-            homeHeroLayer = null;
-            renderHeroDots();
             if (!homeHeroSlides.length) {
                 document.getElementById('heroSection').classList.add('hidden');
                 return;
             }
-            document.getElementById('heroSection').classList.remove('hidden', 'skeleton');
-            showHomeHeroSlide(0, false);
-            syncHeroWatchlistButton();
-            if (homeHeroSlides.length > 1) {
-                homeHeroTimer = setInterval(() => showHomeHeroSlide((homeHeroIndex + 1) % homeHeroSlides.length), 7000);
-            }
-        }
-
-        function showHomeHeroSlide(index, crossfade = true) {
-            const item = homeHeroSlides[index];
-            if (!item) return;
-            homeHeroIndex = index;
-            const nextLayer = homeHeroLayer === 'a' ? 'b' : 'a';
-            const incoming = document.getElementById(`heroImage${nextLayer.toUpperCase()}`);
-            const outgoing = homeHeroLayer ? document.getElementById(`heroImage${homeHeroLayer.toUpperCase()}`) : null;
-            incoming.style.backgroundImage = `url("${item.backdrop || item.logo}")`;
-            incoming.classList.remove('is-visible');
-            requestAnimationFrame(() => {
-                incoming.classList.add('is-visible');
-                if (crossfade) outgoing?.classList.remove('is-visible');
-            });
-            homeHeroLayer = nextLayer;
-
-            const logo = document.getElementById('heroLogo');
-            const title = document.getElementById('heroTitle');
-            logo.onerror = () => { logo.hidden = true; title.hidden = false; };
-            logo.hidden = !item.titleLogo;
-            logo.src = item.titleLogo || '';
-            logo.alt = item.name;
-            title.hidden = Boolean(item.titleLogo);
-            title.textContent = item.name;
-            const metadata = [
-                item.maturityRating,
-                item.rating !== '' && item.rating != null ? `★ ${item.rating}` : '',
-                item.year,
-                item.genre
-            ].filter(Boolean);
-            document.getElementById('heroMeta').textContent = metadata.join(' · ');
-            document.getElementById('heroDesc').textContent = item.plot;
-            document.getElementById('heroPlayBtn').onclick = () => playItem(item);
-            document.getElementById('heroInfoBtn').onclick = () => toggleWatchlist(item.id);
-            syncHeroWatchlistButton();
-            document.querySelectorAll('#heroDots button').forEach((dot, dotIndex) => {
-                dot.classList.toggle('is-active', dotIndex === index);
-                dot.setAttribute('aria-current', dotIndex === index ? 'true' : 'false');
+            document.getElementById('heroSection').classList.remove('hidden');
+            VenusSkeleton.finishHome(document.getElementById('heroSection'));
+            VenusSlider.init(homeHeroSlides, {
+                onPlay: item => playItem(item),
+                onList: item => toggleWatchlist(item.id),
+                onSlide: item => {
+                    activeHomeHeroItem = item;
+                    syncHeroWatchlistButton(item);
+                }
             });
         }
 
-        function renderHeroDots() {
-            const container = document.getElementById('heroDots');
-            container.replaceChildren();
-            homeHeroSlides.forEach((item, index) => {
-                const dot = document.createElement('button');
-                dot.type = 'button';
-                dot.className = 'tv-focusable home-hero__dot';
-                dot.dataset.navId = `hero-dot-${index}`;
-                dot.setAttribute('aria-label', `Destaque ${index + 1}: ${item.name}`);
-                dot.onclick = () => showHomeHeroSlide(index);
-                container.appendChild(dot);
-            });
-        }
-
-        function syncHeroWatchlistButton() {
-            const item = homeHeroSlides[homeHeroIndex];
+        function syncHeroWatchlistButton(item = activeHomeHeroItem) {
             const saved = item && watchlist.includes(String(item.id));
             document.getElementById('heroListIcon').textContent = saved ? '✓' : '+';
             document.getElementById('heroListText').textContent = saved ? 'Na Minha Lista' : 'Minha Lista';
@@ -1547,26 +1495,11 @@
 
         function renderSkeletonState() {
             const hero = document.getElementById('heroSection');
-            hero.classList.add('skeleton');
-            hero.classList.remove('hidden');
-            document.getElementById('heroLogo').hidden = true;
+            VenusSkeleton.renderHome(hero, document.getElementById('catalogContainer'));
+            document.getElementById('heroLogoWrap').hidden = true;
             document.getElementById('heroTitle').innerText = '';
             document.getElementById('heroDesc').innerText = '';
             document.getElementById('heroMeta').innerText = '';
-
-            const container = document.getElementById('catalogContainer');
-            container.innerHTML = `
-                <div class="space-y-2.5">
-                    <div class="h-4 w-44 skeleton rounded"></div>
-                    <div class="flex space-x-3.5 overflow-x-auto no-scrollbar pb-2">
-                        <div class="flex-none w-40 h-60 skeleton rounded-xl"></div>
-                        <div class="flex-none w-40 h-60 skeleton rounded-xl"></div>
-                        <div class="flex-none w-40 h-60 skeleton rounded-xl"></div>
-                        <div class="flex-none w-40 h-60 skeleton rounded-xl"></div>
-                        <div class="flex-none w-40 h-60 skeleton rounded-xl"></div>
-                    </div>
-                </div>
-            `;
         }
 
         async function loadMoviesEndpoint() {
@@ -1637,6 +1570,46 @@
                 }
             } catch (e) {
                 apiConnectionError = e.message || 'Falha ao conectar ao serviço Xtream.';
+            }
+        }
+
+        async function hydrateCatalogData() {
+            const homeItems = [...homeHeroSlides, ...homeDashboard.collections.flatMap(collection => collection.items)];
+            apiConnectionError = '';
+            try {
+                await Promise.all([loadMoviesEndpoint(), loadSeriesEndpoint()]);
+                const mergedItems = new Map();
+                [...catalogData.movies, ...catalogData.series].forEach(item => {
+                    mergedItems.set(`${item.type}:${String(item.id)}`, item);
+                });
+                homeItems.forEach(item => {
+                    const key = `${item.type}:${String(item.id)}`;
+                    const existing = mergedItems.get(key);
+                    mergedItems.set(key, existing ? {
+                        ...existing,
+                        ...item,
+                        titleLogo: item.titleLogo || existing.titleLogo,
+                        backdrop: item.backdrop || existing.backdrop,
+                        genre: item.genre || existing.genre,
+                        plot: item.plot || existing.plot,
+                        url: item.url || existing.url
+                    } : item);
+                });
+                const items = [...mergedItems.values()];
+                catalogData = {
+                    movies: items.filter(item => item.type !== 'series'),
+                    series: items.filter(item => item.type === 'series')
+                };
+                rebuildCatalogSearchIndex();
+                renderPlatformFilters();
+                if (currentTab !== 'home' || currentPlatformFilter) {
+                    renderCurrentCatalog();
+                    updateFocusables();
+                }
+                if (!apiConnectionError) writeCatalogCache().catch(() => {});
+                console.log(`[Home] catalog hydrated: ${catalogData.movies.length} movies, ${catalogData.series.length} series`);
+            } catch (error) {
+                console.warn('[Home] background catalog hydration failed:', error);
             }
         }
 
@@ -1720,11 +1693,7 @@
             ['home', 'movies', 'series', 'watchlist'].forEach(t => {
                 const btn = document.getElementById(`nav-${t}`);
                 if (btn) {
-                    if (t === tab) {
-                        btn.className = "tv-focusable px-4 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer text-white bg-venus-red shadow";
-                    } else {
-                        btn.className = "tv-focusable px-4 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer text-gray-300 hover:text-white";
-                    }
+                    btn.classList.toggle('active', t === tab);
                 }
             });
 
@@ -1790,7 +1759,7 @@
             }
 
             if (homeDashboard && currentTab === 'home' && !currentPlatformFilter) {
-                currentGroupedCatalog = homeDashboard.collections.map(collection => [collection.title, collection.items]);
+                currentGroupedCatalog = homeDashboard.collections.map(collection => [collection.title, collection.items, collection.id]);
                 appendNextCatalogGroups();
                 return;
             }
@@ -1814,23 +1783,13 @@
             const container = document.getElementById('catalogContainer');
             container.querySelector('[data-nav-id="more-categories"]')?.remove();
             const fragment = document.createDocumentFragment();
-            const end = Math.min(renderedCategoryCount + CATEGORY_BATCH_SIZE, currentGroupedCatalog.length);
+            const end = currentGroupedCatalog.length;
 
             while (renderedCategoryCount < end) {
-                const [groupName, groupItems] = currentGroupedCatalog[renderedCategoryCount++];
-                const row = createCatalogRow(groupName, groupItems);
-                catalogRows.set(row.id, groupItems);
+                const [groupName, groupItems, collectionId] = currentGroupedCatalog[renderedCategoryCount++];
+                const row = createCatalogRow(groupName, groupItems, collectionId);
+                catalogRows.set(row.id, { items: groupItems, isTopTen: String(collectionId || '').startsWith('top10_') });
                 fragment.appendChild(row);
-            }
-
-            if (renderedCategoryCount < currentGroupedCatalog.length) {
-                const moreButton = document.createElement('button');
-                moreButton.type = 'button';
-                moreButton.dataset.navId = 'more-categories';
-                moreButton.className = 'tv-focusable w-full py-4 rounded-lg bg-gray-900 text-sm font-bold text-gray-200 border border-gray-800';
-                moreButton.textContent = `Mais categorias (${currentGroupedCatalog.length - renderedCategoryCount})`;
-                moreButton.onclick = appendNextCatalogGroups;
-                fragment.appendChild(moreButton);
             }
 
             container.appendChild(fragment);
@@ -1838,48 +1797,44 @@
             updateFocusables();
         }
 
-        function createCatalogRow(groupName, groupItems) {
-            const rowId = `row-${sanitizeId(groupName)}`;
+        function createCatalogRow(groupName, groupItems, collectionId = '') {
+            const rowId = `row-${sanitizeId(collectionId || groupName)}`;
+            const isTopTen = String(collectionId).startsWith('top10_');
             const rowDiv = document.createElement('div');
             rowDiv.className = 'space-y-2.5';
+            rowDiv.dataset.row = rowId;
             const heading = document.createElement('h2');
             heading.className = homeDashboard && currentTab === 'home' ? 'home-collection-title' : 'text-xs lg:text-sm font-bold text-white tracking-wide';
             heading.textContent = homeDashboard && currentTab === 'home' ? groupName : `${groupName} (${groupItems.length})`;
 
             const track = document.createElement('div');
             track.id = rowId;
+            track.dataset.row = rowId;
             track.className = `carousel-track ${homeDashboard && currentTab === 'home' ? 'home-collection-track' : 'space-x-3.5'} flex overflow-x-auto no-scrollbar`;
-            const visibleItems = groupItems.slice(0, MAX_CARDS_PER_ROW);
-            visibleItems.forEach(item => track.appendChild(createCatalogCard(item)));
-            if (groupItems.length > MAX_CARDS_PER_ROW) track.appendChild(createMoreItemsCard(rowId));
+            const visibleCount = isTopTen ? 10 : MAX_CARDS_PER_ROW;
+            const visibleItems = groupItems.slice(0, visibleCount);
+            visibleItems.forEach((item, index) => track.appendChild(createCatalogCard(item, isTopTen ? index + 1 : null, rowId)));
+            if (groupItems.length > visibleCount) track.appendChild(createMoreItemsCard(rowId));
 
             rowDiv.append(heading, track);
             return rowDiv;
         }
 
-        function createCatalogCard(item) {
-            const card = document.createElement('div');
-            card.dataset.navId = `card-${item.id}`;
-            card.className = `tv-focusable card-item flex-none bg-[#141414] overflow-hidden cursor-pointer relative group/card border border-gray-800/80 ${homeDashboard && currentTab === 'home' ? 'home-poster-card' : 'w-40 rounded-xl'}`;
-            card.onclick = () => openDetailsModalById(item.id, item.type);
-            const media = document.createElement('div');
-            media.className = `home-poster-media w-full bg-[#181818] relative skeleton ${homeDashboard && currentTab === 'home' ? '' : 'h-60'}`;
-            const image = document.createElement('img');
-            image.dataset.src = item.logo || '';
-            image.alt = item.name;
-            image.decoding = 'async';
-            image.className = 'h-full w-full object-cover opacity-0';
-            media.appendChild(image);
-            const title = document.createElement('p');
-            title.className = 'p-2.5 bg-[#141414] text-xs font-medium text-gray-200 truncate';
-            title.textContent = item.name;
-            card.append(media, title);
-            return card;
+        function createCatalogCard(item, rank = null, rowId = '') {
+            return VenusCard.createCard(item.name, item.plot, item.logo, {
+                id: item.id,
+                navId: `card-${item.id}`,
+                rowId,
+                rank,
+                className: `home-poster-card ${homeDashboard && currentTab === 'home' ? '' : 'w-40'}`,
+                onClick: () => openDetailsModalById(item.id, item.type)
+            });
         }
 
         function createMoreItemsCard(rowId) {
             const card = document.createElement('div');
             card.dataset.navId = `more-${rowId}`;
+            card.dataset.row = rowId;
             card.className = 'tv-focusable card-item flex-none w-40 bg-gray-900/90 rounded-xl overflow-hidden cursor-pointer flex flex-col items-center justify-center border border-gray-800 text-center p-3';
             card.innerHTML = '<i class="fa-solid fa-circle-plus text-xl text-venus-red mb-1"></i><span class="text-xs font-bold text-gray-200">Mais títulos</span>';
             card.onclick = () => loadMoreRow(rowId);
@@ -1890,14 +1845,15 @@
 
         function loadMoreRow(rowId) {
             const container = document.getElementById(`row-${rowId}`);
-            const allItems = catalogRows.get(rowId);
-            if (!container || !allItems) return;
+            const row = catalogRows.get(rowId);
+            if (!container || !row) return;
+            const { items: allItems, isTopTen } = row;
             container.querySelector(`[data-nav-id="more-${rowId}"]`)?.remove();
             const currentCount = container.children.length;
             const nextBatch = allItems.slice(currentCount, currentCount + batchSize);
 
             const fragment = document.createDocumentFragment();
-            nextBatch.forEach(item => fragment.appendChild(createCatalogCard(item)));
+            nextBatch.forEach((item, index) => fragment.appendChild(createCatalogCard(item, isTopTen ? currentCount + index + 1 : null, rowId)));
 
             if (currentCount + batchSize < allItems.length) {
                 fragment.appendChild(createMoreItemsCard(rowId));
@@ -1973,7 +1929,7 @@
                     closeSearchModal();
                     openDetailsModalById(item.id, item.type);
                 };
-                card.innerHTML = `<div class="h-40 w-full bg-[#181818] relative skeleton"><img data-src="${item.logo}" alt="${item.name}" decoding="async" class="h-full w-full object-cover opacity-0"></div><div class="p-2 bg-[#141414]"><p class="text-[10px] font-medium text-gray-200 truncate">${item.name}</p></div>`;
+                card.innerHTML = `<div class="h-40 w-full bg-[#181818] relative skeleton"><img data-src="${item.logo}" alt="${item.name}" loading="lazy" decoding="async" class="h-full w-full object-cover opacity-0"></div><div class="p-2 bg-[#141414]"><p class="text-[10px] font-medium text-gray-200 truncate">${item.name}</p></div>`;
                 fragment.appendChild(card);
             }
             searchRenderCount = end;
@@ -1993,7 +1949,7 @@
 
         async function openDetailsModalById(id, type) {
             const all = [...catalogData.movies, ...catalogData.series];
-            const item = all.find(i => i.id.toString() === id.toString());
+            const item = all.find(i => i.id.toString() === id.toString() && (!type || i.type === type));
             if (item) openDetailsModal(item);
         }
 
@@ -2142,7 +2098,14 @@
 
             if (currentHls) { currentHls.destroy(); currentHls = null; }
 
-            const streamUrl = item.url;
+            const kind = item.type === 'series' ? 'series' : 'movie';
+            const streamUrl = item.url || (item.id ? buildStreamUrl(kind, item.id, item.streamExtension || 'mp4') : '');
+            if (!streamUrl) {
+                video.style.display = 'none';
+                errorDiv.style.display = 'block';
+                updateFocusables();
+                return;
+            }
             const extension = (item.streamExtension || streamUrl.split('.').pop() || '').toLowerCase();
             if (Hls.isSupported() && (extension === 'm3u8' || extension === 'ts')) {
                 const hls = new Hls();
@@ -2218,6 +2181,7 @@
 
         // --- TV REMOTE CONTROL NAVIGATION ENGINE (D-PAD) ---
         function updateFocusables() {
+            VenusSpatialNav.refresh();
             debounceFocusRefresh();
         }
 
@@ -2225,79 +2189,23 @@
             if (focusableElements.length === 0) refreshFocusables();
             if (focusableElements.length === 0) return;
             currentFocusIndex = (index + focusableElements.length) % focusableElements.length;
-            debounceFocusPaint(currentFocusIndex);
+            VenusSpatialNav.focus(focusableElements[currentFocusIndex]);
         }
 
-        function handleRemoteControl(e) {
-            if (focusableElements.length === 0) updateFocusables();
-            if (focusableElements.length === 0) return;
+        function syncFocusedElement(element) {
+            if (focusedElement && focusedElement !== element) focusedElement.classList.remove('focused');
+            focusedElement = element;
+            currentFocusIndex = focusableElements.indexOf(element);
+            element?.classList.add('focused');
+        }
 
-            let key = e.key;
-            let handled = false;
-
-            if (key === 'ArrowRight') {
-                setFocus(currentFocusIndex + 1);
-                handled = true;
-            } else if (key === 'ArrowLeft') {
-                setFocus(currentFocusIndex - 1);
-                handled = true;
-            } else if ((key === 'ArrowDown' || key === 'ArrowUp') && focusedElement?.closest('#platformFilterList')) {
-                const target = document.querySelector(key === 'ArrowDown' ? '#catalogContainer .tv-focusable' : '#heroInfoBtn');
-                const targetIndex = focusableElements.indexOf(target);
-                if (targetIndex >= 0) setFocus(targetIndex);
-                handled = true;
-            } else if (key === 'ArrowDown' && focusedElement?.closest('#heroSection')) {
-                const target = document.querySelector('#catalogContainer .tv-focusable');
-                const targetIndex = focusableElements.indexOf(target);
-                if (targetIndex >= 0) setFocus(targetIndex);
-                handled = true;
-            } else if (key === 'ArrowUp' && focusedElement?.closest('#catalogContainer')) {
-                const firstRow = document.querySelector('#catalogContainer [id^="row-"]');
-                if (firstRow && focusedElement.closest('[id^="row-"]') === firstRow) {
-                    let target;
-                    if (document.getElementById('platformBrowse').classList.contains('hidden')) {
-                        target = document.getElementById('heroPlayBtn');
-                    } else {
-                        const focusedRect = focusedElement.getBoundingClientRect();
-                        const focusedCenter = focusedRect.left + focusedRect.width / 2;
-                        const platformButtons = Array.from(document.querySelectorAll('#platformFilterList [data-platform-id]'));
-                        target = platformButtons.reduce((nearest, button) => {
-                            const rect = button.getBoundingClientRect();
-                            const distance = Math.abs(rect.left + rect.width / 2 - focusedCenter);
-                            return !nearest || distance < nearest.distance ? { button, distance } : nearest;
-                        }, null)?.button;
-                    }
-                    const targetIndex = focusableElements.indexOf(target);
-                    if (targetIndex >= 0) setFocus(targetIndex);
-                    handled = true;
-                }
-            } else if (key === 'ArrowDown') {
-                setFocus(Math.min(currentFocusIndex + 5, focusableElements.length - 1));
-                handled = true;
-            } else if (key === 'ArrowUp') {
-                setFocus(Math.max(currentFocusIndex - 5, 0));
-                handled = true;
-            } else if (key === 'Enter') {
-                const el = focusableElements[currentFocusIndex];
-                if (el) el.click();
-                handled = true;
-            } else if (key === 'Escape' || key === 'Backspace') {
-                if (!document.getElementById('searchModal').classList.contains('hidden')) {
-                    closeSearchModal();
-                    handled = true;
-                } else if (!document.getElementById('detailsPage').classList.contains('hidden')) {
-                    closeDetailsModal();
-                    handled = true;
-                } else if (!document.getElementById('playerModal').classList.contains('hidden')) {
-                    closePlayer();
-                    handled = true;
-                } else if (!document.getElementById('settingsModal').classList.contains('hidden')) {
-                    closeSettingsModal();
-                    handled = true;
-                }
-            }
-
-            if (handled) e.preventDefault();
+        function handleBackNavigation() {
+            if (!document.getElementById('searchModal').classList.contains('hidden')) closeSearchModal();
+            else if (!document.getElementById('detailsPage').classList.contains('hidden')) closeDetailsModal();
+            else if (!document.getElementById('playerModal').classList.contains('hidden')) closePlayer();
+            else if (!document.getElementById('settingsModal').classList.contains('hidden')) closeSettingsModal();
+            else return false;
+            return true;
         }
     </script>
 </body>

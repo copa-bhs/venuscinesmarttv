@@ -1,67 +1,50 @@
-// Card component
+(function () {
+    // Cria um poster acessível, lazy-loaded e opcionalmente numerado.
+    function createCard(title, description, imageUrl, options = {}) {
+        const card = document.createElement('article');
+        card.className = `tv-focusable card-item catalog-poster ${options.className || ''}`.trim();
+        card.dataset.navId = options.navId || `card-${options.id || title}`;
+        if (options.rowId) card.dataset.row = options.rowId;
+        card.tabIndex = 0;
+        card.setAttribute('role', 'button');
+        card.setAttribute('aria-label', title);
+        if (options.onClick) card.addEventListener('click', options.onClick);
 
-// Function to create a card element
-function createCard(title, description, imageUrl) {
-    const card = document.createElement('div');
-    card.className = 'card';
+        const media = document.createElement('div');
+        media.className = 'catalog-poster__media skeleton';
+        if (!imageUrl) media.classList.remove('skeleton');
+        const image = document.createElement('img');
+        image.className = 'catalog-poster__image opacity-0';
+        if (imageUrl) image.dataset.src = imageUrl;
+        image.alt = title;
+        image.loading = 'lazy';
+        image.decoding = 'async';
+        media.appendChild(image);
 
-    const img = document.createElement('img');
-    img.className = 'card-img';
-    img.src = imageUrl;
-    img.alt = title;
+        const name = document.createElement('p');
+        name.className = 'catalog-poster__title';
+        name.textContent = title;
+        card.append(media, name);
 
-    const cardBody = document.createElement('div');
-    cardBody.className = 'card-body';
+        if (!options.rank) return card;
 
-    const cardTitle = document.createElement('h3');
-    cardTitle.className = 'card-title';
-    cardTitle.textContent = title;
+        const slot = document.createElement('div');
+        slot.className = 'top10-card-slot';
+        if (options.rowId) slot.dataset.row = options.rowId;
+        const rank = document.createElement('span');
+        rank.className = 'top-number';
+        rank.textContent = String(options.rank);
+        rank.setAttribute('aria-hidden', 'true');
+        slot.append(rank, card);
+        return slot;
+    }
 
-    const cardText = document.createElement('p');
-    cardText.className = 'card-text';
-    cardText.textContent = description;
+    function createSkeletonCard() {
+        const card = document.createElement('div');
+        card.className = 'skeleton-card';
+        card.setAttribute('aria-hidden', 'true');
+        return card;
+    }
 
-    cardBody.appendChild(cardTitle);
-    cardBody.appendChild(cardText);
-
-    card.appendChild(img);
-    card.appendChild(cardBody);
-
-    // Add click event listener to navigate to details page
-    card.addEventListener('click', () => {
-        loadDetailsPage();
-    });
-
-    return card;
-}
-
-// Function to create a skeleton card
-function createSkeletonCard() {
-    const card = document.createElement('div');
-    card.className = 'card skeleton';
-
-    const img = document.createElement('div');
-    img.className = 'card-img skeleton';
-    img.style.height = '150px';
-
-    const cardBody = document.createElement('div');
-    cardBody.className = 'card-body';
-
-    const cardTitle = document.createElement('div');
-    cardTitle.className = 'card-title skeleton';
-    cardTitle.style.height = '20px';
-    cardTitle.style.width = '80%';
-
-    const cardText = document.createElement('div');
-    cardText.className = 'card-text skeleton';
-    cardText.style.height = '15px';
-    cardText.style.width = '60%';
-
-    cardBody.appendChild(cardTitle);
-    cardBody.appendChild(cardText);
-
-    card.appendChild(img);
-    card.appendChild(cardBody);
-
-    return card;
-}
+    window.VenusCard = { createCard, createSkeletonCard };
+})();
