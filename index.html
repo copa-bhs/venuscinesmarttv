@@ -493,6 +493,74 @@
     </style>
     <link rel="stylesheet" href="/css/styles.css?v=tv-home-design-20261010-3">
     <style>
+        #navbar {
+            justify-content: space-between;
+            gap: 24px;
+            padding-inline: 40px;
+            background: linear-gradient(180deg, rgba(0, 0, 0, .9), rgba(0, 0, 0, .32));
+            border-bottom: 0;
+        }
+        #navbar.scrolled { background: rgba(10, 10, 10, .96); }
+        #navbar .topbar-left { flex: 0 0 auto; }
+        #navbar .topbar__brand { font-size: 22px; }
+        #navbar .topbar-center { flex: 1 1 auto; justify-content: center; gap: 10px; }
+        #navbar .topbar-right { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; }
+        #navbar .topbar-link {
+            min-height: 46px;
+            gap: 9px;
+            padding: 10px 20px;
+            border: 0 !important;
+            border-radius: 999px;
+            color: #fff;
+            background: transparent;
+            transition: color 120ms ease, background-color 120ms ease !important;
+        }
+        #navbar .topbar-link i { font-size: 15px; }
+        #navbar .topbar-link.active,
+        #navbar .topbar-link.active.focused {
+            color: #080808 !important;
+            background: #fff !important;
+        }
+        #navbar .topbar-link.active::after { display: none; }
+        #navbar .topbar-link.focused:not(.active),
+        #navbar .topbar-link:focus-visible:not(.active) {
+            color: #fff !important;
+            background: rgba(255, 255, 255, .2) !important;
+        }
+        #navbar .topbar-icon-btn {
+            flex: 0 0 44px;
+            width: 44px;
+            height: 44px;
+            border: 0;
+            border-radius: 999px;
+            color: #fff;
+            background: rgba(255, 255, 255, .08);
+            font-size: 16px;
+            transition: background-color 120ms ease !important;
+        }
+        #navbar .topbar-icon-btn.focused,
+        #navbar .topbar-icon-btn:focus-visible { color: #fff; background: rgba(255, 255, 255, .2); }
+        #navbar .topbar-link:focus-visible,
+        #navbar .topbar-icon-btn:focus-visible { outline: none !important; }
+        @media (max-width: 760px) {
+            #navbar { gap: 8px; padding-inline: 18px; }
+            #navbar .topbar-left { flex: 0 0 auto; }
+            #navbar .topbar__brand { font-size: 16px; }
+            #navbar .topbar-center { flex: 1 1 auto; justify-content: center; gap: 4px; }
+            #navbar .topbar-right { gap: 4px; }
+            #navbar .topbar-link { min-height: 40px; gap: 6px; padding: 8px 11px; font-size: 12px; }
+            #navbar .topbar-link i { font-size: 12px; }
+            #navbar .topbar-icon-btn { flex-basis: 36px; width: 36px; height: 36px; }
+        }
+        @media (max-width: 520px) {
+            #navbar { gap: 5px; padding-inline: 10px; }
+            #navbar .topbar__brand { font-size: 12px; }
+            #navbar .topbar-center { min-width: 0; gap: 1px; }
+            #navbar .topbar-link { min-width: 0; flex: 1 1 0; justify-content: center; min-height: 36px; gap: 2px; padding: 7px 2px; font-size: 8px; }
+            #navbar .topbar-link i { font-size: 9px; }
+            #navbar .topbar-right { gap: 2px; }
+            #navbar .topbar-icon-btn { flex-basis: 32px; width: 32px; height: 32px; }
+        }
         .home-hero-shell {
             position: relative;
             box-sizing: border-box;
@@ -553,6 +621,31 @@
         }
         .home-hero__dot.is-active { background: #E50914; }
         #catalogPage, .home-collection-track, .carousel-track { scroll-behavior: auto !important; }
+        #catalogContainer .carousel-track {
+            position: relative;
+            display: block !important;
+            width: 100%;
+            min-width: 0;
+            padding: 10px 16px 16px;
+            margin: -10px -16px -16px;
+            overflow: hidden !important;
+            overflow: clip !important;
+            overscroll-behavior: none;
+        }
+        #catalogContainer .carousel-track__inner {
+            display: flex;
+            width: max-content;
+            min-width: max-content;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 2px 4px;
+            transform: translate3d(0, 0, 0);
+            transition: transform 280ms ease-out;
+        }
+        #catalogContainer .carousel-track__inner > * { flex-shrink: 0; }
+        @media (prefers-reduced-motion: reduce) {
+            #catalogContainer .carousel-track__inner { transition-duration: 1ms; }
+        }
         .tv-focusable.focused,
         .tv-focusable:focus-visible,
         [data-focusable].focused,
@@ -626,7 +719,7 @@
             .home-hero__action--list { left: 129px; width: 132px; }
         }
     </style>
-    <script defer src="/js/components/spatial-nav.js?v=tv-home-design-20261010-6"></script>
+    <script defer src="/js/components/spatial-nav.js?v=tv-home-design-20261010-10"></script>
     <script defer src="/js/components/skeleton.js"></script>
     <script defer src="/js/components/slider.js"></script>
     <script defer src="/js/components/card.js?v=tv-home-design-20261010-3"></script>
@@ -648,15 +741,19 @@
             <span class="topbar__brand">VÊNUS CINE</span>
         </div>
         <div class="topbar-center">
-            <button type="button" data-nav-id="btn-search-trigger" class="tv-focusable topbar-icon-btn" onclick="openSearchModal()" title="Pesquisar" aria-label="Pesquisar">
-                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-            </button>
             <button type="button" data-nav-id="tab-home" data-route="home" id="nav-home" class="tv-focusable topbar-link nav-link" onclick="switchTab('home')" aria-current="page"><i class="fa-solid fa-house" aria-hidden="true"></i><span>Início</span></button>
             <button type="button" data-nav-id="tab-series" data-route="series" id="nav-series" class="tv-focusable topbar-link nav-link" onclick="switchTab('series')"><i class="fa-solid fa-tv" aria-hidden="true"></i><span>Séries</span></button>
             <button type="button" data-nav-id="tab-movies" data-route="movies" id="nav-movies" class="tv-focusable topbar-link nav-link" onclick="switchTab('movies')"><i class="fa-solid fa-film" aria-hidden="true"></i><span>Filmes</span></button>
             <button type="button" data-nav-id="tab-watchlist" data-route="watchlist" id="nav-watchlist" class="tv-focusable topbar-link nav-link" onclick="switchTab('watchlist')"><i class="fa-solid fa-bookmark" aria-hidden="true"></i><span>Minha Lista</span></button>
         </div>
-        <div class="topbar-right" aria-hidden="true"></div>
+        <div class="topbar-right">
+            <button type="button" data-nav-id="btn-search-trigger" class="tv-focusable topbar-icon-btn" onclick="openSearchModal()" title="Pesquisar" aria-label="Pesquisar">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            </button>
+            <button type="button" data-nav-id="btn-settings-trigger" class="tv-focusable topbar-icon-btn" onclick="window.Android?.openSettings?.()" title="Configurações" aria-label="Configurações">
+                <i class="fa-solid fa-gear" aria-hidden="true"></i>
+            </button>
+        </div>
     </nav>
 
 
@@ -1152,7 +1249,7 @@
             VenusSpatialNav.init({
                 onBack: handleBackNavigation,
                 onFocus: syncFocusedElement,
-                onReachEnd: rowId => { void loadMoreRow(rowId, true); },
+                onReachEnd: rowId => loadMoreRow(rowId, true),
                 onInteraction: () => VenusSlider.pause(15000)
             });
             VenusSpatialNav.focus(document.getElementById('nav-home'), false);
@@ -1497,13 +1594,20 @@
             const track = document.createElement('div');
             track.id = rowId;
             track.dataset.row = rowId;
-            track.className = `carousel-track ${homeDashboard && currentTab === 'home' ? 'home-collection-track' : 'space-x-3.5'} flex overflow-x-auto overflow-y-hidden no-scrollbar`;
+            track.dataset.carouselViewport = 'true';
+            track.dataset.topTen = String(isTopTen);
+            track.className = `carousel-track ${homeDashboard && currentTab === 'home' ? 'home-collection-track' : ''}`;
+            track.scrollLeft = 0;
+            const trackContent = document.createElement('div');
+            trackContent.dataset.carouselTrack = 'true';
+            trackContent.className = 'carousel-track__inner';
             const visibleCount = isTopTen ? 10 : MAX_CARDS_PER_ROW;
             const visibleItems = groupItems.slice(0, visibleCount);
-            visibleItems.forEach((item, index) => track.appendChild(createCatalogCard(item, isTopTen ? index + 1 : null, rowId)));
+            visibleItems.forEach((item, index) => trackContent.appendChild(createCatalogCard(item, isTopTen ? index + 1 : null, rowId)));
             const hasApiNextPage = (currentTab === 'movies' || currentTab === 'series') && catalogApiPages[currentTab].hasNext;
-            if (!isTopTen && (groupItems.length > visibleCount || hasApiNextPage)) track.appendChild(createMoreItemsCard(rowId));
+            if (!isTopTen && (groupItems.length > visibleCount || hasApiNextPage)) trackContent.appendChild(createMoreItemsCard(rowId));
 
+            track.appendChild(trackContent);
             rowDiv.append(heading, track);
             return rowDiv;
         }
@@ -1535,15 +1639,21 @@
         async function loadMoreRow(rowId, focusFirstNewItem = false) {
             const container = document.getElementById(rowId);
             const row = catalogRows.get(rowId);
-            if (!container || !row || row.isTopTen || loadingCatalogRows.has(rowId)) return;
+            if (!container || !row || row.isTopTen) return false;
+            if (loadingCatalogRows.has(rowId)) return true;
             loadingCatalogRows.add(rowId);
             const { items: allItems, type } = row;
-            const moreButton = container.querySelector(`[data-nav-id="more-${rowId}"]`);
+            const trackContent = container.querySelector('[data-carousel-track]');
+            if (!trackContent) {
+                loadingCatalogRows.delete(rowId);
+                return false;
+            }
+            const moreButton = trackContent.querySelector(`[data-nav-id="more-${rowId}"]`);
             if (moreButton) {
                 moreButton.dataset.loading = 'true';
                 moreButton.setAttribute('aria-label', 'Carregando mais títulos');
             }
-            const currentCount = Array.from(container.children).filter(child => child !== moreButton).length;
+            const currentCount = Array.from(trackContent.children).filter(child => child !== moreButton).length;
             moreButton?.remove();
             try {
                 if (currentCount >= allItems.length && type && catalogApiPages[type].hasNext) {
@@ -1555,7 +1665,7 @@
                     writeCatalogCache().catch(() => {});
                 }
                 const nextBatch = allItems.slice(currentCount, currentCount + batchSize);
-                if (!nextBatch.length) return;
+                if (!nextBatch.length) return false;
 
                 const fragment = document.createDocumentFragment();
                 nextBatch.forEach(item => fragment.appendChild(createCatalogCard(item, null, rowId)));
@@ -1563,7 +1673,7 @@
                 if (currentCount + nextBatch.length < allItems.length || (type && catalogApiPages[type].hasNext)) {
                     fragment.appendChild(createMoreItemsCard(rowId));
                 }
-                container.appendChild(fragment);
+                trackContent.appendChild(fragment);
                 observeLazyImages(container);
                 updateFocusables();
                 if (focusFirstNewItem) {
@@ -1571,11 +1681,13 @@
                         .find(element => element.dataset.navId === `card-${nextBatch[0].id}`);
                     if (firstNewItem) VenusSpatialNav.focus(firstNewItem);
                 }
+                return true;
             } catch (error) {
                 if (moreButton?.isConnected) moreButton.remove();
-                container.appendChild(createMoreItemsCard(rowId));
+                trackContent.appendChild(createMoreItemsCard(rowId));
                 updateFocusables();
                 console.error('[Catalog] failed to load next page:', error);
+                return false;
             } finally {
                 loadingCatalogRows.delete(rowId);
             }

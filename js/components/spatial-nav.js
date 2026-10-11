@@ -4,6 +4,8 @@
     let queuedDirection = null;
     let framePending = false;
     let scrollFrame = 0;
+    let carouselFrame = 0;
+    let pendingCarouselItem = null;
     let lastNavbarElement = null;
     let focusablesDirty = true;
     let visibleElementsCache = [];
@@ -21,9 +23,11 @@
 
     function applyFocusStyle(element) {
         element.classList.add('focused');
-        element.style.setProperty('outline', '4px solid #ffffff', 'important');
-        element.style.setProperty('outline-offset', '2px', 'important');
-        element.style.setProperty('border-color', '#ffffff', 'important');
+        const isNavbarItem = Boolean(element.closest('#navbar'));
+        element.style.setProperty('outline', isNavbarItem ? 'none' : '4px solid #ffffff', 'important');
+        if (isNavbarItem) element.style.removeProperty('outline-offset');
+        else element.style.setProperty('outline-offset', '2px', 'important');
+        element.style.setProperty('border-color', isNavbarItem ? 'transparent' : '#ffffff', 'important');
         element.style.setProperty('box-shadow', 'none', 'important');
         element.style.setProperty('transform', 'none', 'important');
         element.style.setProperty('z-index', '10', 'important');
@@ -34,8 +38,49 @@
         scrollFrame = requestAnimationFrame(() => {
             scrollFrame = 0;
             if (!element.isConnected) return;
-            try { element.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' }); }
+            const carouselViewport = element.closest('[data-carousel-viewport]');
+            if (carouselViewport) {
+                const catalogPage = document.getElementById('catalogPage');
+                if (catalogPage) {
+                    const pageRect = catalogPage.getBoundingClientRect();
+                    const viewportRect = carouselViewport.getBoundingClientRect();
+                    const topLimit = pageRect.top + 16;
+                    const bottomLimit = pageRect.bottom - 16;
+                    if (viewportRect.top < topLimit) catalogPage.scrollTop += viewportRect.top - topLimit;
+                    else if (viewportRect.bottom > bottomLimit) catalogPage.scrollTop += viewportRect.bottom - bottomLimit;
+                }
+                return;
+            }
+            const target = element;
+            try { target.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' }); }
             catch { element.scrollIntoView(); }
+        });
+    }
+
+    function centerCarouselItem(element) {
+        if (!element.closest('[data-carousel-viewport]')) return;
+        pendingCarouselItem = element;
+        if (carouselFrame) return;
+        carouselFrame = requestAnimationFrame(() => {
+            carouselFrame = 0;
+            const item = pendingCarouselItem;
+            pendingCarouselItem = null;
+            if (!item?.isConnected) return;
+            const viewport = item.closest('[data-carousel-viewport]');
+            const track = viewport?.querySelector('[data-carousel-track]');
+            if (!viewport || !track) return;
+
+            if (viewport.scrollLeft) viewport.scrollLeft = 0;
+            const viewportRect = viewport.getBoundingClientRect();
+            const itemRect = item.getBoundingClientRect();
+            const currentTransform = getComputedStyle(track).transform;
+            const matrixMatch = currentTransform.match(/^matrix(3d)?\((.+)\)$/);
+            const matrixValues = matrixMatch ? matrixMatch[2].split(',').map(Number) : [];
+            const currentX = matrixMatch
+                ? (matrixMatch[1] ? matrixValues[12] : matrixValues[4]) || 0
+                : 0;
+            const shift = viewportRect.left + viewportRect.width / 2 - (itemRect.left + itemRect.width / 2);
+            track.style.transform = `translate3d(${currentX + shift}px, 0, 0)`;
         });
     }
 
@@ -95,9 +140,15 @@
         focusedElement = element;
         if (element.closest('#navbar')) lastNavbarElement = element;
         if (!focusedElement.classList.contains('focused')) applyFocusStyle(focusedElement);
+        const carouselViewport = element.closest('[data-carousel-viewport]');
+        const carouselScrollLeft = carouselViewport?.scrollLeft || 0;
         try { focusedElement.focus({ preventScroll: true }); }
         catch { focusedElement.focus(); }
+        if (carouselViewport && carouselViewport.scrollLeft !== carouselScrollLeft) {
+            carouselViewport.scrollLeft = carouselScrollLeft;
+        }
         if (scroll) revealFocusedElement(focusedElement);
+        centerCarouselItem(focusedElement);
         onFocus(focusedElement);
         return true;
     }
@@ -217,6 +268,38 @@
         return false;
     }
 
+    function moveWithinCarousel(current, direction, elements) {
+        if (direction !== 'left' && direction !== 'right') return false;
+        const viewport = current.closest('[data-carousel-viewport]');
+        if (!viewport) return false;
+
+        const rowItems = getSpatialCandidates(current, direction, elements);
+        const currentIndex = rowItems.indexOf(current);
+        if (currentIndex < 0) return false;
+        const step = direction === 'right' ? 1 : -1;
+        const next = rowItems[currentIndex + step];
+        if (next) {
+            setFocus(next, true, elements);
+            return true;
+        }
+
+        if (direction === 'left' || viewport.dataset.topTen === 'true') {
+            const wrapped = direction === 'right' ? rowItems[0] : rowItems[rowItems.length - 1];
+            if (wrapped) setFocus(wrapped, true, elements);
+            return true;
+        }
+
+        Promise.resolve(onReachEnd(current.dataset.row, current)).then(loaded => {
+            if (loaded) return;
+            const refreshed = getVisibleElements(true);
+            const updatedItems = getSpatialCandidates(current, direction, refreshed);
+            if (updatedItems.length && updatedItems[updatedItems.length - 1] === current) {
+                setFocus(updatedItems[0], true, refreshed);
+            }
+        });
+        return true;
+    }
+
     // Escolhe o vizinho visível mais próximo na direção solicitada.
     function move(direction) {
         const elements = getVisibleElements();
@@ -242,6 +325,7 @@
 
         if (moveBetweenSections(current, direction, elements)) return;
         if ((direction === 'left' || direction === 'right') && moveWithinHero(current, direction, elements)) return;
+        if ((direction === 'left' || direction === 'right') && moveWithinCarousel(current, direction, elements)) return;
         if ((direction === 'up' || direction === 'down') && moveBetweenRows(current, direction, elements)) return;
 
         const currentRect = current.getBoundingClientRect();
@@ -280,7 +364,27 @@
 
         if (best) setFocus(best.element, true, elements);
         else if (direction === 'right' && current.closest('#catalogContainer') && current.dataset.row) {
-            onReachEnd(current.dataset.row, current);
+            const rowItems = getSpatialCandidates(current, direction, elements);
+            const itemIndex = rowItems.indexOf(current);
+            const viewport = current.closest('[data-carousel-viewport]');
+            const isFixedTopTen = viewport?.dataset.topTen === 'true';
+            const wrapTo = direction === 'left'
+                ? rowItems[rowItems.length - 1]
+                : isFixedTopTen ? rowItems[0] : null;
+            if (wrapTo) {
+                setFocus(wrapTo, true, elements);
+                return;
+            }
+            Promise.resolve(onReachEnd(current.dataset.row, current)).then(loaded => {
+                if (loaded) return;
+                const refreshed = getVisibleElements(true);
+                const refreshedItems = getSpatialCandidates(current, direction, refreshed);
+                const firstItem = refreshedItems.find(item => item.dataset.row === current.dataset.row);
+                if (firstItem && itemIndex >= refreshedItems.length - 1) setFocus(firstItem, true, refreshed);
+            });
+        } else if (direction === 'left' && current.closest('#catalogContainer') && current.dataset.row) {
+            const rowItems = getSpatialCandidates(current, direction, elements);
+            if (rowItems.length && rowItems[0] === current) setFocus(rowItems[rowItems.length - 1], true, elements);
         }
     }
 
@@ -351,6 +455,7 @@
         });
         document.addEventListener('mouseover', event => {
             const element = event.target.closest(selector);
+            if (element?.closest('[data-carousel-viewport]')) return;
             if (element && element !== focusedElement && getVisibleElements().includes(element)) setFocus(element, false);
         });
         const observer = new MutationObserver(records => {
