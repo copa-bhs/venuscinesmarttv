@@ -165,6 +165,8 @@
         if (direction !== 'left' && direction !== 'right') return elements;
         const navbar = current.closest('#navbar');
         if (navbar) return elements.filter(element => navbar.contains(element));
+        const carouselViewport = current.closest('[data-carousel-viewport]');
+        if (carouselViewport) return elements.filter(element => carouselViewport.contains(element));
         if (current.closest('#catalogContainer') && current.dataset.row) {
             const row = getCatalogRows(elements).find(items => items.includes(current));
             if (row) return row.filter(element => element === current || !element.dataset.navId?.startsWith('more-'));

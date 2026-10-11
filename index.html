@@ -388,7 +388,9 @@
         }
         .netflix-details-grid {
             display: grid;
-            grid-template-columns: 1.7fr 1fr;
+            grid-template-columns: minmax(0, 1fr);
+            width: 100%;
+            min-width: 0;
             gap: 1.5rem;
         }
         .netflix-copy {
@@ -407,6 +409,78 @@
             font-size: 0.8rem;
             font-weight: 700;
         }
+        .detail-people { display: grid; width: 100%; gap: 22px; min-width: 0; }
+        .detail-people__section[hidden] { display: none !important; }
+        .detail-people__section { width: 100%; min-width: 0; }
+        .detail-people__heading { margin: 0 0 10px; color: #808080; font-size: 13px; font-weight: 800; }
+        .detail-people__track {
+            display: flex;
+            flex-wrap: nowrap;
+            width: 100%;
+            min-width: 0;
+            align-items: stretch;
+            gap: 12px;
+            padding: 8px 8px 12px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            overscroll-behavior-x: contain;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+            scroll-snap-type: x proximity;
+        }
+        .detail-person-card {
+            display: flex;
+            flex: 0 0 110px;
+            width: 110px;
+            min-height: 166px;
+            flex-direction: column;
+            align-items: center;
+            gap: 7px;
+            padding: 10px 8px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            color: #fff;
+            background: #1a1a1a;
+            text-align: center;
+            scroll-snap-align: center;
+        }
+        .detail-person-card.focused,
+        .detail-person-card:focus-visible { z-index: 2; outline: 3px solid #fff; outline-offset: 2px; border-color: #fff; }
+        .detail-person-card__avatar {
+            display: grid;
+            width: 90px;
+            height: 90px;
+            flex: 0 0 90px;
+            place-items: center;
+            overflow: hidden;
+            border-radius: 50%;
+            color: #aaa;
+            background: #555;
+            font-size: 26px;
+        }
+        .detail-person-card__avatar img { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .detail-person-card__name {
+            display: -webkit-box;
+            overflow: hidden;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 750;
+            line-height: 16px;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+        }
+        .detail-person-card__character {
+            display: block;
+            width: 100%;
+            overflow: hidden;
+            color: #999;
+            font-size: 11px;
+            line-height: 14px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .detail-people__legacy { flex: 1 1 auto; min-width: 0; max-width: 100%; margin: 0; padding: 8px; color: rgba(255,255,255,.8); font-size: 14px; white-space: normal; }
         .detail-round-btn {
             width: 48px;
             height: 48px;
@@ -469,7 +543,7 @@
                 padding-bottom: 2rem;
             }
             .netflix-details-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: minmax(0, 1fr);
             }
         }
         @media (max-width: 600px) {
@@ -903,11 +977,15 @@
                         <p id="modalGenres" class="details-genres"></p>
                     </div>
 
-                    <div class="detail-side">
-                        <div id="castContainer">
-                            <strong>Elenco:</strong>
-                            <div class="detail-value" id="modalCast">-</div>
-                        </div>
+                    <div class="detail-people">
+                        <section id="castContainer" class="detail-people__section" aria-labelledby="castHeading" hidden>
+                            <h3 id="castHeading" class="detail-people__heading">ELENCO</h3>
+                            <div id="modalCast" class="detail-people__track no-scrollbar" data-carousel-viewport="true" data-row="details-cast" aria-label="Elenco"></div>
+                        </section>
+                        <section id="crewContainer" class="detail-people__section" aria-labelledby="crewHeading" hidden>
+                            <h3 id="crewHeading" class="detail-people__heading">DIREÇÃO</h3>
+                            <div id="modalCrew" class="detail-people__track no-scrollbar" data-carousel-viewport="true" data-row="details-crew" aria-label="Direção"></div>
+                        </section>
                     </div>
                 </div>
 
@@ -1179,6 +1257,75 @@
             return displayMetadata(duration, 'Duração não informada');
         }
 
+        function createDetailPersonCard(person, index, rowId, includeCharacter) {
+            const isLegacyPerson = typeof person === 'string';
+            const name = String(isLegacyPerson ? person : person?.nome || person?.name || '').trim();
+            if (!name) return null;
+
+            const card = document.createElement('div');
+            card.className = 'tv-focusable detail-person-card';
+            card.tabIndex = 0;
+            card.setAttribute('role', 'group');
+            card.setAttribute('aria-label', name);
+            card.dataset.navId = `${rowId}-${person?.id ?? index}`;
+            card.dataset.row = rowId;
+
+            const avatar = document.createElement('span');
+            avatar.className = 'detail-person-card__avatar';
+            const placeholder = document.createElement('i');
+            placeholder.className = 'fa-solid fa-user';
+            placeholder.setAttribute('aria-hidden', 'true');
+            avatar.appendChild(placeholder);
+
+            const photo = !isLegacyPerson && (person?.foto || person?.photo || person?.profile_path);
+            if (typeof photo === 'string' && photo.trim()) {
+                const image = document.createElement('img');
+                image.src = photo;
+                image.alt = '';
+                image.loading = 'lazy';
+                image.decoding = 'async';
+                image.addEventListener('error', () => avatar.replaceChildren(placeholder), { once: true });
+                avatar.replaceChildren(image);
+            }
+
+            const nameElement = document.createElement('span');
+            nameElement.className = 'detail-person-card__name';
+            nameElement.textContent = name;
+            const character = document.createElement('span');
+            character.className = 'detail-person-card__character';
+            character.textContent = includeCharacter && !isLegacyPerson
+                ? String(person?.personagem || person?.character || ' ')
+                : ' ';
+            card.append(avatar, nameElement, character);
+            return card;
+        }
+
+        function renderDetailPeople(sectionId, headingId, trackId, rowId, title, value, includeCharacter) {
+            const section = document.getElementById(sectionId);
+            const heading = document.getElementById(headingId);
+            const track = document.getElementById(trackId);
+            heading.textContent = title;
+            track.replaceChildren();
+
+            if (Array.isArray(value)) {
+                value.forEach((person, index) => {
+                    const card = createDetailPersonCard(person, index, rowId, includeCharacter);
+                    if (card) track.appendChild(card);
+                });
+                section.hidden = track.children.length === 0;
+                return;
+            }
+
+            const legacyText = typeof value === 'string' ? value.trim() : '';
+            section.hidden = !legacyText;
+            if (legacyText) {
+                const text = document.createElement('p');
+                text.className = 'detail-people__legacy';
+                text.textContent = legacyText;
+                track.appendChild(text);
+            }
+        }
+
         function applyDetailsMetadata(item) {
             const title = document.getElementById('modalTitle');
             const titleLogo = document.getElementById('modalTitleLogo');
@@ -1228,7 +1375,20 @@
             document.getElementById('modalYear').textContent = displayMetadata(item.year, 'Ano não informado');
             document.getElementById('modalDescription').textContent = item.plot || 'Sinopse indisponível.';
             document.getElementById('modalGenres').textContent = displayMetadata(item.genre, 'Gênero não informado');
-            document.getElementById('modalCast').textContent = item.cast || 'Elenco não informado';
+            const apiItem = item.apiItem || {};
+            const cast = item.cast ?? item.elenco ?? apiItem.elenco ?? apiItem.cast ?? '';
+            const directors = item.directors ?? item.diretores ?? apiItem.diretores ?? apiItem.directors ?? '';
+            const creators = item.creators ?? item.criadores ?? apiItem.criadores ?? apiItem.creators ?? '';
+            renderDetailPeople('castContainer', 'castHeading', 'modalCast', 'details-cast', 'ELENCO', cast, true);
+            renderDetailPeople(
+                'crewContainer',
+                'crewHeading',
+                'modalCrew',
+                'details-crew',
+                item.type === 'series' ? 'CRIAÇÃO' : 'DIREÇÃO',
+                item.type === 'series' ? creators : directors,
+                false
+            );
         }
 
         function getTitleDetails(item) {
