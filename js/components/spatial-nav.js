@@ -4,8 +4,6 @@
     let queuedDirection = null;
     let framePending = false;
     let scrollFrame = 0;
-    let carouselFrame = 0;
-    let pendingCarouselItem = null;
     let lastNavbarElement = null;
     let focusablesDirty = true;
     let visibleElementsCache = [];
@@ -17,20 +15,10 @@
 
     function clearFocusStyle(element) {
         element.classList.remove('focused');
-        ['outline', 'outline-offset', 'border-color', 'box-shadow', 'transform', 'z-index']
-            .forEach(property => element.style.removeProperty(property));
     }
 
     function applyFocusStyle(element) {
         element.classList.add('focused');
-        const isNavbarItem = Boolean(element.closest('#navbar'));
-        element.style.setProperty('outline', isNavbarItem ? 'none' : '4px solid #ffffff', 'important');
-        if (isNavbarItem) element.style.removeProperty('outline-offset');
-        else element.style.setProperty('outline-offset', '2px', 'important');
-        element.style.setProperty('border-color', isNavbarItem ? 'transparent' : '#ffffff', 'important');
-        element.style.setProperty('box-shadow', 'none', 'important');
-        element.style.setProperty('transform', 'none', 'important');
-        element.style.setProperty('z-index', '10', 'important');
     }
 
     function revealFocusedElement(element) {
@@ -38,49 +26,12 @@
         scrollFrame = requestAnimationFrame(() => {
             scrollFrame = 0;
             if (!element.isConnected) return;
-            const carouselViewport = element.closest('[data-carousel-viewport]');
-            if (carouselViewport) {
-                const catalogPage = document.getElementById('catalogPage');
-                if (catalogPage) {
-                    const pageRect = catalogPage.getBoundingClientRect();
-                    const viewportRect = carouselViewport.getBoundingClientRect();
-                    const topLimit = pageRect.top + 16;
-                    const bottomLimit = pageRect.bottom - 16;
-                    if (viewportRect.top < topLimit) catalogPage.scrollTop += viewportRect.top - topLimit;
-                    else if (viewportRect.bottom > bottomLimit) catalogPage.scrollTop += viewportRect.bottom - bottomLimit;
-                }
-                return;
+            const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+            try {
+                element.scrollIntoView({ behavior, block: 'nearest', inline: 'center' });
+            } catch {
+                element.scrollIntoView();
             }
-            const target = element;
-            try { target.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' }); }
-            catch { element.scrollIntoView(); }
-        });
-    }
-
-    function centerCarouselItem(element) {
-        if (!element.closest('[data-carousel-viewport]')) return;
-        pendingCarouselItem = element;
-        if (carouselFrame) return;
-        carouselFrame = requestAnimationFrame(() => {
-            carouselFrame = 0;
-            const item = pendingCarouselItem;
-            pendingCarouselItem = null;
-            if (!item?.isConnected) return;
-            const viewport = item.closest('[data-carousel-viewport]');
-            const track = viewport?.querySelector('[data-carousel-track]');
-            if (!viewport || !track) return;
-
-            if (viewport.scrollLeft) viewport.scrollLeft = 0;
-            const viewportRect = viewport.getBoundingClientRect();
-            const itemRect = item.getBoundingClientRect();
-            const currentTransform = getComputedStyle(track).transform;
-            const matrixMatch = currentTransform.match(/^matrix(3d)?\((.+)\)$/);
-            const matrixValues = matrixMatch ? matrixMatch[2].split(',').map(Number) : [];
-            const currentX = matrixMatch
-                ? (matrixMatch[1] ? matrixValues[12] : matrixValues[4]) || 0
-                : 0;
-            const shift = viewportRect.left + viewportRect.width / 2 - (itemRect.left + itemRect.width / 2);
-            track.style.transform = `translate3d(${currentX + shift}px, 0, 0)`;
         });
     }
 
@@ -140,15 +91,9 @@
         focusedElement = element;
         if (element.closest('#navbar')) lastNavbarElement = element;
         if (!focusedElement.classList.contains('focused')) applyFocusStyle(focusedElement);
-        const carouselViewport = element.closest('[data-carousel-viewport]');
-        const carouselScrollLeft = carouselViewport?.scrollLeft || 0;
         try { focusedElement.focus({ preventScroll: true }); }
         catch { focusedElement.focus(); }
-        if (carouselViewport && carouselViewport.scrollLeft !== carouselScrollLeft) {
-            carouselViewport.scrollLeft = carouselScrollLeft;
-        }
         if (scroll) revealFocusedElement(focusedElement);
-        centerCarouselItem(focusedElement);
         onFocus(focusedElement);
         return true;
     }
@@ -195,15 +140,21 @@
         }, null)?.element || null;
     }
 
+    function getHeroActions(elements) {
+        return ['hero-play', 'hero-list', 'hero-info']
+            .map(navId => elements.find(element => element.dataset.navId === navId))
+            .filter(Boolean);
+    }
+
     function moveBetweenSections(current, direction, elements) {
         const navbar = document.getElementById('navbar');
         const heroSection = document.getElementById('heroSection');
-        const heroCard = elements.find(element => element.dataset.navId === 'hero-card');
-        if (!navbar || !heroSection || !heroCard) return false;
+        if (!navbar || !heroSection) return false;
 
         if (direction === 'down' && navbar.contains(current)) {
-            setFocus(heroCard, true, elements);
-            return true;
+            const target = getHeroActions(elements)[0] || getCatalogRows(elements)[0]?.[0];
+            if (target) setFocus(target, true, elements);
+            return Boolean(target);
         }
 
         if (heroSection.contains(current) && direction === 'up') {
@@ -225,23 +176,12 @@
 
     function moveWithinHero(current, direction, elements) {
         const heroSection = document.getElementById('heroSection');
-        const heroCard = elements.find(element => element.dataset.navId === 'hero-card');
-        if (!heroSection || !heroCard || !heroSection.contains(current)) return false;
-        const actions = [
-            elements.find(element => element.dataset.navId === 'hero-play'),
-            elements.find(element => element.dataset.navId === 'hero-info')
-        ].filter(Boolean);
-        if (current === heroCard) {
-            const target = direction === 'right' ? actions[0] : actions[actions.length - 1];
-            if (target) setFocus(target, true, elements);
-            return true;
-        }
+        const actions = getHeroActions(elements);
+        if (!heroSection || !heroSection.contains(current)) return false;
         const actionIndex = actions.indexOf(current);
         if (actionIndex >= 0) {
-            if (direction === 'left') setFocus(heroCard, true, elements);
-            else if (direction === 'right') {
-                setFocus(actions[actionIndex + 1] || heroCard, true, elements);
-            }
+            if (direction === 'left' && actionIndex > 0) setFocus(actions[actionIndex - 1], true, elements);
+            else if (direction === 'right' && actionIndex < actions.length - 1) setFocus(actions[actionIndex + 1], true, elements);
             return true;
         }
         return false;
@@ -255,9 +195,8 @@
         const currentRowIndex = rows.findIndex(row => row.includes(current));
         if (currentRowIndex < 0) return false;
         if (direction === 'up') {
-            const heroCard = elements.find(element => element.dataset.navId === 'hero-card');
-            const targetRow = currentRowIndex === 0 ? [heroCard].filter(Boolean) : rows[currentRowIndex - 1];
-            const target = closestByHorizontalPosition(targetRow.filter(element => elements.includes(element)), current);
+            const targetRow = currentRowIndex === 0 ? getHeroActions(elements) : rows[currentRowIndex - 1];
+            const target = closestByHorizontalPosition(targetRow, current);
             if (target) setFocus(target, true, elements);
             return true;
         }

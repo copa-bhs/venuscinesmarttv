@@ -156,7 +156,8 @@ window.VenusSlider = (function () {
             dots.appendChild(dot);
         });
         document.getElementById('heroPlayBtn').onclick = () => callbacks.onPlay?.(slides[activeIndex]);
-        document.getElementById('heroInfoBtn').onclick = () => callbacks.onList?.(slides[activeIndex]);
+        document.getElementById('heroListBtn').onclick = () => callbacks.onList?.(slides[activeIndex]);
+        document.getElementById('heroInfoBtn').onclick = () => callbacks.onInfo?.(slides[activeIndex]);
         setSlide(0);
         scheduleNext();
     }
